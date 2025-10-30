@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="SYSC4806ProjectWorking" />
+        <module name="SYSC4806Project" />
       </profile>
     </annotationProcessing>
   </component>

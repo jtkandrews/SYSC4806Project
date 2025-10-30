@@ -1,7 +1,8 @@
-package com.amazonbookstore.model;
+package com.amazin.svelteamazin.model;
 
 import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.*;
@@ -22,7 +23,7 @@ public class BookStore {
                     .map(this::parseBook)
                     .collect(Collectors.toList()));
 
-            System.out.println(" Loaded " + books.size() + " books from file.");
+            System.out.println("Loaded " + books.size() + " books from file.");
         } catch (Exception e) {
             System.err.println("⚠️ Error loading books file: " + e.getMessage());
         }
@@ -30,7 +31,10 @@ public class BookStore {
 
     private Book parseBook(String line) {
         String[] data = line.split(",");
-        return new Book(data[0], data[1], data[2], data[3], data[4], Double.parseDouble(data[5]), Integer.parseInt(data[6]));
+        return new Book(
+                data[0], data[1], data[2], data[3], data[4],
+                Double.parseDouble(data[5]), Integer.parseInt(data[6])
+        );
     }
 
     public List<Book> getAllBooks() {
@@ -43,8 +47,8 @@ public class BookStore {
 
     public List<Book> searchBooks(String keyword) {
         return books.stream()
-                .filter(b -> b.getTitle().toLowerCase().contains(keyword.toLowerCase()) ||
-                        b.getAuthor().toLowerCase().contains(keyword.toLowerCase()))
+                .filter(b -> b.getTitle().toLowerCase().contains(keyword.toLowerCase())
+                        || b.getAuthor().toLowerCase().contains(keyword.toLowerCase()))
                 .collect(Collectors.toList());
     }
 }

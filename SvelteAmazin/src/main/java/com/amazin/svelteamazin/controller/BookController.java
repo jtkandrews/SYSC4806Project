@@ -1,7 +1,7 @@
-package com.amazonbookstore.controller;
+package com.amazin.svelteamazin.controller;
 
-import com.amazonbookstore.model.Book;
-import com.amazonbookstore.model.BookStore;
+import com.amazin.svelteamazin.model.Book;
+import com.amazin.svelteamazin.model.BookStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;

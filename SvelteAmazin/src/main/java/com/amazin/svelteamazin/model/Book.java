@@ -1,4 +1,4 @@
-package com.amazonbookstore.model;
+package com.amazin.svelteamazin.model;
 
 public class Book {
     private String isbn;
@@ -22,7 +22,6 @@ public class Book {
         this.inventory = inventory;
     }
 
-    // Getters and setters
     public String getIsbn() { return isbn; }
     public String getTitle() { return title; }
     public String getAuthor() { return author; }
