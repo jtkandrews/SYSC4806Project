@@ -2,6 +2,7 @@ package com.amazonbookstore;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+// Verified backend setup - Anas
 
 @SpringBootApplication
 public class AmazonBookstoreApplication {
