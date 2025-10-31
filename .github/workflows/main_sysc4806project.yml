@@ -25,13 +25,14 @@ jobs:
           distribution: 'microsoft'
 
       - name: Build with Maven
+        working-directory: SvelteAmazin
         run: mvn clean install
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          path: '${{ github.workspace }}/SvelteAmazin/target/*.jar'
 
   deploy:
     runs-on: windows-latest

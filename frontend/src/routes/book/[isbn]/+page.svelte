@@ -1,6 +1,5 @@
-<script lang="ts">
-  import type { Book } from '$lib/types';
-  export let data: { book: Book };
+<script>
+  export let data;
   const b = data.book;
 </script>
 
