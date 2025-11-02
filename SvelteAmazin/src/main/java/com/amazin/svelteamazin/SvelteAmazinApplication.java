@@ -25,7 +25,6 @@ public class SvelteAmazinApplication {
         return (args) -> {
             String fileName = "books.csv";
 
-            List<Book> books = new ArrayList<>();
 //            int i = 0;
 
             // ✅ Recommended best practice: load as InputStream so it works in JAR and IDE

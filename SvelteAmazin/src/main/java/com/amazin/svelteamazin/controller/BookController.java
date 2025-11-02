@@ -34,16 +34,12 @@ public class BookController {
             Sort.Direction direction = "desc".equalsIgnoreCase(order) ? Sort.Direction.DESC : Sort.Direction.ASC;
 
             // Ensure only allowed fields are sortable
-            switch (sortBy.toLowerCase()) {
-                case "title":
-                    return repo.findAll(Sort.by(direction, "title"));
-                case "price":
-                    return repo.findAll(Sort.by(direction, "price"));
-                case "inventory":
-                    return repo.findAll(Sort.by(direction, "inventory"));
-                default:
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort field: " + sortBy);
-            }
+            return switch (sortBy.toLowerCase()) {
+                case "title" -> repo.findAll(Sort.by(direction, "title"));
+                case "price" -> repo.findAll(Sort.by(direction, "price"));
+                case "inventory" -> repo.findAll(Sort.by(direction, "inventory"));
+                default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort field: " + sortBy);
+            };
         }
 
         return repo.findAll();
