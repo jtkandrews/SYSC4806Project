@@ -55,3 +55,10 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B2DD3F47BC774F9897A7354F257AF202 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E820BC5CA6B04D95B692E24BFC648702 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2B5805A6F05448A88D9A10E8589FF78C }}
+
+      - name: Deploy to Azure Web App (Publish Profile)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'SYSC4806Project'
+          slot-name: 'Production'
+          package: 'SvelteAmazin/target/*.jar'
