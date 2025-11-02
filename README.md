@@ -3,7 +3,26 @@ SYSC4806 Group Project - JS Svelte
 
 [![CI - Maven](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/main_sysc4806project.yml/badge.svg?branch=main)](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/main_sysc4806project.yml)
 
-# Running the Application
+# Running the Application Locally
+In the terminal, run the following: \
+`cd frontend`
+
+`npm run build` 
+
+`cd ..` 
+
+`rm -rf SvelteAmazin/src/main/resources/static` 
+
+`mkdir -p SvelteAmazin/src/main/resources/static` 
+
+`cp -r frontend/build/* SvelteAmazin/src/main/resources/static/`
+
+`cd SvelteAmazin` 
+
+`./mvnw package` 
+
+`java -jar target/SvelteAmazin-0.0.1-SNAPSHOT.jar`
+
 
 
 # Milestone 1
