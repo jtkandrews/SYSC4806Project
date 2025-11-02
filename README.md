@@ -11,6 +11,10 @@ SYSC4806 Group Project - JS Svelte
 - [x] Basic Backend with Books and their details
 - [x] Svelte Frontend
 - [x] Integrate with CI
+- [x] Deployed on Azure
+- [x] Setup Maven and Springboot Structure
+- [x] Requirements outlined in [Wiki](https://github.com/jtkandrews/SYSC4806Project/wiki/Requirements)
+- [x] Created Test Cases
 
  ## Current State of the Project
 
