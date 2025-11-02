@@ -2,6 +2,7 @@ package com.amazin.svelteamazin.controller;
 
 import com.amazin.svelteamazin.model.Book;
 import com.amazin.svelteamazin.model.BookRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,10 +22,30 @@ public class BookController {
 
     /**
      * GET /api/books
-     * Return all books.
+     * Return all books, optionally sorted by a field and order.
+     * Example: /api/books?sortBy=price&order=desc
      */
     @GetMapping
-    public List<Book> getAllBooks() {
+    public List<Book> getAllBooks(
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "order", required = false, defaultValue = "asc") String order
+    ) {
+        if (sortBy != null && !sortBy.isBlank()) {
+            Sort.Direction direction = "desc".equalsIgnoreCase(order) ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+            // Ensure only allowed fields are sortable
+            switch (sortBy.toLowerCase()) {
+                case "title":
+                    return repo.findAll(Sort.by(direction, "title"));
+                case "price":
+                    return repo.findAll(Sort.by(direction, "price"));
+                case "inventory":
+                    return repo.findAll(Sort.by(direction, "inventory"));
+                default:
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort field: " + sortBy);
+            }
+        }
+
         return repo.findAll();
     }
 
