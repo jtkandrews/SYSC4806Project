@@ -9,8 +9,6 @@ import org.springframework.context.annotation.Bean;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 @SpringBootApplication
 public class SvelteAmazinApplication {

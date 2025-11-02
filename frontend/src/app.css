@@ -256,7 +256,7 @@
     display: flex;
     justify-content: center;
   }
-  
+
   .detail-image {
     max-width: 300px;
     width: 100%;
@@ -265,7 +265,7 @@
     box-shadow: var(--shadow-md);
     object-fit: cover;
   }
-  
+
   .detail-image-placeholder {
     width: 300px;
     height: 450px;
