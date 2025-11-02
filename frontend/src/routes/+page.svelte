@@ -1,20 +1,79 @@
 <script>
+  import { onMount } from 'svelte';
+
   export let data;
   const books = data.initialBooks || [];
+
+  onMount(() => {
+    if (books.length > 0) {
+      console.log('First book:', books[0]);
+      console.log('Has imageUrl?', books[0].imageUrl);
+      console.log('ImageUrl value:', books[0].imageUrl);
+    }
+  });
 </script>
 
-<div style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
-  <h1 style="margin-bottom: 1.5rem">Books</h1>
-  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
-    {#each books as book}
-      <a href="/book/{book.isbn}" style="text-decoration: none; color: inherit; display: block; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; transition: box-shadow 0.2s;">
-        <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">{book.title}</h3>
-        <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.9rem;">{book.author}</p>
-        <p style="margin: 0; font-weight: 600; color: #0066cc;">
-          {book.price.toLocaleString(undefined, {style: 'currency', currency: 'USD'})}
-        </p>
-      </a>
-    {/each}
+<div class="container">
+  <div class="page-header">
+    <h1 class="page-title">Browse Our Collection</h1>
+    <p class="page-subtitle">Discover great books at amazin prices</p>
   </div>
-</div>
 
+
+  {#if books.length === 0}
+    <div class="empty-state">
+      <h2 class="empty-state-title">No books available</h2>
+      <p class="empty-state-text">Check back soon for new arrivals!</p>
+    </div>
+  {:else}
+    <div class="books-grid">
+      {#each books as book}
+        <div class="book-card">
+          <a href={`/book/${book.isbn}`} class="book-card-link">
+            {#if book.imageUrl?.trim()}
+              <img
+                src={book.imageUrl}
+                alt={`${book.title} cover`}
+                class="book-card-image"
+                loading="lazy"
+              />
+            {:else}
+              <div class="book-card-image-placeholder">
+                <span>📚</span>
+              </div>
+            {/if}
+            <h3 class="book-card-title">{book.title}</h3>
+            <p class="book-card-author">by {book.author}</p>
+          </a>
+
+          <div class="book-card-footer">
+            <div class="book-card-pricing">
+              <p class="book-card-price">
+                {(+book.price).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
+              </p>
+              {#if book.inventory > 0}
+                <p class="book-card-stock">
+                  {book.inventory} {book.inventory === 1 ? 'copy' : 'copies'} available
+                </p>
+              {:else}
+                <p class="book-card-stock" style="color: #ef4444;">
+                  Out of stock
+                </p>
+              {/if}
+            </div>
+
+            <button
+              class="btn btn-primary btn-add-cart"
+              disabled={book.inventory === 0}
+              on:click|stopPropagation|preventDefault={() => {
+                // TODO: Add to cart functionality
+              }}
+            >
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      {/each}
+    </div>
+  {/if}
+</div>

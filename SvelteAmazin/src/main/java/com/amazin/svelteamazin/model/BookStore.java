@@ -25,16 +25,22 @@ public class BookStore {
 
             System.out.println("Loaded " + books.size() + " books from file.");
         } catch (Exception e) {
-            System.err.println("⚠️ Error loading books file: " + e.getMessage());
+            System.err.println("Error loading books file: " + e.getMessage());
         }
     }
 
     private Book parseBook(String line) {
         String[] data = line.split(",");
-        return new Book(
+        String imageUrl = data.length > 7 && !data[7].isEmpty() ? data[7].trim() : "";
+        Book book = new Book(
                 data[0], data[1], data[2], data[3], data[4],
-                Double.parseDouble(data[5]), Integer.parseInt(data[6])
+                Double.parseDouble(data[5]), Integer.parseInt(data[6]), imageUrl
         );
+        // Debug: log first book to verify imageUrl is loaded
+        if (books.isEmpty()) {
+            System.out.println("First book loaded - ImageUrl: " + book.getImageUrl());
+        }
+        return book;
     }
 
     public List<Book> getAllBooks() {
