@@ -2,12 +2,10 @@ name: Build & Deploy Single JAR (App Service)
 
 on:
   push:
-    branches: [ "main" ]
-    paths:
-      - "frontend/**"
-      - "SvelteAmazin/**"
-      - ".github/workflows/deploy.yml"
+    branches:
+      - main
   workflow_dispatch:
+
 
 jobs:
   build-and-deploy:
