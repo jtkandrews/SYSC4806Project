@@ -41,9 +41,11 @@ Currently, the project has the bare-bones elements configured. As seen here, the
 In terms of implementation, the backend is configured as a Spring Boot app which exposes a read-only GET endpoint to list current library of books. This information is displayed via Svelte on the frontend, which fetches the books and displays a stylized grid of said books. 
 
 In regard to deployment, the frontend build is currently being copied into Spring Boot's static resources, from which a single JAR is created. We recognize this situation may not be ideal, and as such we have future plans to potentially address this process. 
-
+ <img width="1266" height="714" alt="image" src="https://github.com/user-attachments/assets/1de3dd62-04cf-40aa-aed5-bf20039675b7" />
+<img width="1265" height="1109" alt="image" src="https://github.com/user-attachments/assets/66d07112-e265-4e00-82de-1c39ffac60a8" />
  ## Database Schema
- 
+**To-do once setup**
+
 
 
 ## The Team
