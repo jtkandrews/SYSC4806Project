@@ -1,13 +1,18 @@
 package com.amazin.svelteamazin.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "books")
 public class Book {
+    @Id @Column(length = 20)
     private String isbn;
-    private String title;
-    private String author;
+    @Column(nullable = false) private String title;
+    @Column(nullable = false) private String author;
     private String publisher;
-    private String description;
-    private double price;
-    private int inventory;
+    @Column(length = 4000) private String description;
+    @Column(nullable = false) private double price;
+    @Column(nullable = false) private int inventory;
     private String imageUrl;
 
 
