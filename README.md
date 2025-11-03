@@ -35,6 +35,15 @@ In the terminal, run the following: \
 - [x] Requirements outlined in [Wiki](https://github.com/jtkandrews/SYSC4806Project/wiki/Requirements)
 - [x] Created Test Cases
 
+## Plan for Sprint 2 
+- [ ] Implement Checkout Feature with Inventory Tracking
+- [ ] Add New Backend Features
+- [ ] Expand Upon Unit Tests
+- [ ] Experiment with Jaccard distance
+- [ ] Expand on Requirements (if needed)
+- [ ] Furthur UI Improvements
+- [ ] Add new features accessible by UI
+- [ ] 
  ## Current State of the Project
 Currently, the project has the bare-bones elements configured. As seen here, the GitHub repo has been established with CI/CD integrations. Additionally, the Azure configuration has been complete, and the current version of the webapp can be seen [here](https://sysc4806project.azurewebsites.net/). 
 
