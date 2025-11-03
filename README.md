@@ -1,7 +1,7 @@
 # Amazin Bookstore
 SYSC4806 Group Project - JS Svelte
 
-[![CI - Maven](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/main_sysc4806project.yml/badge.svg?branch=main)](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/main_sysc4806project.yml)
+[![CI - Maven](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/deploy.yml)
 
 # Running the Application Locally
 In the terminal, run the following: \
@@ -26,8 +26,9 @@ In the terminal, run the following: \
 
 
 # Milestone 1
+![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/1)
 ## Objectives Completed
-- [x] Basic Backend with Books and their details
+- [x] Basic Backend with Books and their details 
 - [x] Svelte Frontend
 - [x] Integrate with CI
 - [x] Deployed on Azure
