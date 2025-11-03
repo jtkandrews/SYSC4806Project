@@ -43,7 +43,7 @@ In the terminal, run the following: \
 - [ ] Expand on Requirements (if needed)
 - [ ] Furthur UI Improvements
 - [ ] Add new features accessible by UI
-- [ ] 
+
  ## Current State of the Project
 Currently, the project has the bare-bones elements configured. As seen here, the GitHub repo has been established with CI/CD integrations. Additionally, the Azure configuration has been complete, and the current version of the webapp can be seen [here](https://sysc4806project.azurewebsites.net/). 
 
