@@ -1,4 +1,9 @@
 # Amazin Bookstore
+<div align="center">
+ <img width="429" height="181" alt="ChatGPT_Image_Nov_3__2025_at_02_47_27_PM-removebg-preview-3" src="https://github.com/user-attachments/assets/f96af1b1-8203-4a8f-be63-80bea02dc3e6" />
+</div>
+
+
 SYSC4806 Group Project - JS Svelte
 
 [![CI - Maven](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/deploy.yml)
