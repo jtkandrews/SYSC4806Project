@@ -50,8 +50,10 @@ Currently, the project has the bare-bones elements configured. As seen here, the
 In terms of implementation, the backend is configured as a Spring Boot app which exposes a read-only GET endpoint to list current library of books. This information is displayed via Svelte on the frontend, which fetches the books and displays a stylized grid of said books. 
 
 In regard to deployment, the frontend build is currently being copied into Spring Boot's static resources, from which a single JAR is created. We recognize this situation may not be ideal, and as such we have future plans to potentially address this process. 
- <img width="1266" height="714" alt="image" src="https://github.com/user-attachments/assets/1de3dd62-04cf-40aa-aed5-bf20039675b7" />
-<img width="1265" height="1109" alt="image" src="https://github.com/user-attachments/assets/66d07112-e265-4e00-82de-1c39ffac60a8" />
+<div align="center">
+ <img width="800" alt="image" src="https://github.com/user-attachments/assets/1de3dd62-04cf-40aa-aed5-bf20039675b7" />
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/66d07112-e265-4e00-82de-1c39ffac60a8" />
+</div>
  ## Database Schema
 The system uses a single `BOOKS` table to store all book information.  
 Each record represents one book listed in the bookstore.
@@ -67,6 +69,10 @@ Each record represents one book listed in the bookstore.
 | `inventory` | INTEGER | Number of copies available |
 | `image_url` | VARCHAR(255) | URL of the book cover image |
 
+## UML Model
+<div align="center">
+<img width="400"" alt="image" src="https://github.com/user-attachments/assets/b8d048d5-4284-46df-b492-5272a31d62ed" />
+</div>
 
 ## The Team
 [Grant Phillips](https://github.com/grantphillips13) \
