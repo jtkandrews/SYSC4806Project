@@ -31,6 +31,10 @@ In the terminal, run the following: \
 
 
 # Milestone 1 ![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/1)
+
+<details>
+<summary>Summary of Milestone 1</summary>
+ 
 ## Objectives Completed
 - [x] Basic Backend with Books and their details 
 - [x] Svelte Frontend
@@ -81,7 +85,19 @@ Each record represents one book listed in the bookstore.
 <img width="400"" alt="image" src="https://github.com/user-attachments/assets/b8d048d5-4284-46df-b492-5272a31d62ed" />
 </div>
 
-## The Team
+</details>
+
+# Milestone 2 ![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/2)
+
+## Plan for Sprint 3
+
+## Current State of the Project
+
+## Database Schema
+
+## UML Model
+
+# The Team
 [Grant Phillips](https://github.com/grantphillips13) \
 [Joseph Andrews](https://github.com/jtkandrews) \
 [Zachary Dredge](https://github.com/zdredge) \
