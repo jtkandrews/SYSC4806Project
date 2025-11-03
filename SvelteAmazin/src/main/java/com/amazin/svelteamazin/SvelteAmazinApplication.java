@@ -74,23 +74,9 @@ public class SvelteAmazinApplication {
 //            // Create some initial books
 //            Book book1 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown", "Astronaut stranded on Mars",
 //                    19.99, 5, "https://covers.openlibrary.org/b/isbn/ 9780804139021-L.jpg");
-//            Book book2 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown", "Astronaut stranded on Mars",
-//                    19.99, 5, "https://covers.openlibrary.org/b/isbn/ 9780804139021-L.jpg");
-//            Book book3 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown", "Astronaut stranded on Mars",
-//                    19.99, 5, "https://covers.openlibrary.org/b/isbn/ 9780804139021-L.jpg");
-//            Book book1 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown", "Astronaut stranded on Mars",
-//                    19.99, 5, "https://covers.openlibrary.org/b/isbn/ 9780804139021-L.jpg");
-//            Book book1 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown", "Astronaut stranded on Mars",
-//                    19.99, 5, "https://covers.openlibrary.org/b/isbn/ 9780804139021-L.jpg");
-//            Book book1 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown", "Astronaut stranded on Mars",
-//                    19.99, 5, "https://covers.openlibrary.org/b/isbn/ 9780804139021-L.jpg");
-//            Book book1 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown", "Astronaut stranded on Mars",
-//                    19.99, 5, "https://covers.openlibrary.org/b/isbn/ 9780804139021-L.jpg");
 
             // Save the books in the repository
 //            bookRepository.save(book1);
-//            bookRepository.save(book2);
-//            bookRepository.save(book3);
         };
     }
 }
