@@ -44,7 +44,7 @@ In regard to deployment, the frontend build is currently being copied into Sprin
  <img width="1266" height="714" alt="image" src="https://github.com/user-attachments/assets/1de3dd62-04cf-40aa-aed5-bf20039675b7" />
 <img width="1265" height="1109" alt="image" src="https://github.com/user-attachments/assets/66d07112-e265-4e00-82de-1c39ffac60a8" />
  ## Database Schema
-**To-do once setup**
+<img width="313" height="293" alt="Screenshot 2025-11-02 232202" src="https://github.com/user-attachments/assets/39cedcb0-1235-47f1-88cf-3933a2a19066" />
 
 
 
