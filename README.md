@@ -25,8 +25,7 @@ In the terminal, run the following: \
 
 
 
-# Milestone 1
-![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/1)
+# Milestone 1 ![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/1)
 ## Objectives Completed
 - [x] Basic Backend with Books and their details 
 - [x] Svelte Frontend
