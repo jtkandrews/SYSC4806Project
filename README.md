@@ -54,7 +54,9 @@ In regard to deployment, the frontend build is currently being copied into Sprin
  <img width="800" alt="image" src="https://github.com/user-attachments/assets/1de3dd62-04cf-40aa-aed5-bf20039675b7" />
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/66d07112-e265-4e00-82de-1c39ffac60a8" />
 </div>
- ## Database Schema
+
+## Database Schema
+
 The system uses a single `BOOKS` table to store all book information.  
 Each record represents one book listed in the bookstore.
 
