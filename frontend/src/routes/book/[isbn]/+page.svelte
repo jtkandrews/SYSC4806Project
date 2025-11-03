@@ -47,7 +47,7 @@
             <strong>ISBN:</strong> {b.isbn}
           </p>
           <p class="detail-info-item">
-            <strong>Stock:</strong> 
+            <strong>Stock:</strong>
             {#if b.inventory > 0}
               <span style="color: #10b981;">{b.inventory} {b.inventory === 1 ? 'copy' : 'copies'} available</span>
             {:else}
@@ -56,8 +56,8 @@
           </p>
         </div>
       </div>
-      <button 
-        class="btn btn-primary btn-add-cart-large" 
+      <button
+        class="btn btn-primary btn-add-cart-large"
         disabled={b.inventory === 0}
         on:click|preventDefault={() => {
           // TODO: Add to cart functionality

@@ -6,8 +6,11 @@ import type { Book } from './types';
 // Leaving API_BASE empty makes fetch('/api/...') hit the same server.
 const API_BASE = '';
 
-export async function getAllBooks(fetchFn: typeof fetch = fetch): Promise<Book[]> {
-    const res = await fetchFn(`${API_BASE}/api/books`);
+export async function getAllBooks(fetchFn: typeof fetch = fetch, sortBy?: 'title' | 'price' | 'inventory', sortOrder?: 'asc' | 'desc'): Promise<Book[]> {
+    const params = new URLSearchParams();
+    if (sortBy) params.append('sortBy', sortBy);
+    if (sortOrder) params.append('order', sortOrder);
+    const res = await fetchFn(`${API_BASE}/api/books?${params.toString()}`);
     if (!res.ok) throw new Error(`Failed to load books (${res.status})`);
     return res.json();
 }

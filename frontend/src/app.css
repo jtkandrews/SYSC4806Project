@@ -451,3 +451,20 @@
       height: 350px;
     }
   }
+
+  .sort-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .sort-controls label {
+    margin-right: 0.5rem;
+    font-weight: 600;
+  }
+
+  .sort-controls select {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+  }
