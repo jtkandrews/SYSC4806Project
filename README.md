@@ -44,8 +44,19 @@ In regard to deployment, the frontend build is currently being copied into Sprin
  <img width="1266" height="714" alt="image" src="https://github.com/user-attachments/assets/1de3dd62-04cf-40aa-aed5-bf20039675b7" />
 <img width="1265" height="1109" alt="image" src="https://github.com/user-attachments/assets/66d07112-e265-4e00-82de-1c39ffac60a8" />
  ## Database Schema
-<img width="313" height="293" alt="Screenshot 2025-11-02 232202" src="https://github.com/user-attachments/assets/39cedcb0-1235-47f1-88cf-3933a2a19066" />
+The system uses a single `BOOKS` table to store all book information.  
+Each record represents one book listed in the bookstore.
 
+| Column Name | Type | Description |
+|--------------|------|-------------|
+| `isbn` | VARCHAR(20) **PK** | Unique identifier for each book |
+| `title` | VARCHAR(255) | Title of the book |
+| `author` | VARCHAR(255) | Name of the author |
+| `publisher` | VARCHAR(255) | Publisher of the book |
+| `genre` | VARCHAR(255) | Book genre (e.g., Fiction, Science, Biography) |
+| `price` | DOUBLE PRECISION | Price of the book |
+| `inventory` | INTEGER | Number of copies available |
+| `image_url` | VARCHAR(255) | URL of the book cover image |
 
 
 ## The Team
