@@ -1,7 +1,7 @@
 # Amazin Bookstore
 SYSC4806 Group Project - JS Svelte
 
-[![CI - Maven](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/main_sysc4806project.yml/badge.svg?branch=main)](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/main_sysc4806project.yml)
+[![CI - Maven](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/jtkandrews/SYSC4806Project/actions/workflows/deploy.yml)
 
 # Running the Application Locally
 In the terminal, run the following: \
@@ -25,9 +25,9 @@ In the terminal, run the following: \
 
 
 
-# Milestone 1
+# Milestone 1 ![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/1)
 ## Objectives Completed
-- [x] Basic Backend with Books and their details
+- [x] Basic Backend with Books and their details 
 - [x] Svelte Frontend
 - [x] Integrate with CI
 - [x] Deployed on Azure
@@ -35,11 +35,44 @@ In the terminal, run the following: \
 - [x] Requirements outlined in [Wiki](https://github.com/jtkandrews/SYSC4806Project/wiki/Requirements)
 - [x] Created Test Cases
 
+## Plan for Sprint 2 
+- [ ] Implement Checkout Feature with Inventory Tracking
+- [ ] Add New Backend Features
+- [ ] Expand Upon Unit Tests
+- [ ] Experiment with Jaccard distance
+- [ ] Expand on Requirements (if needed)
+- [ ] Furthur UI Improvements
+- [ ] Add new features accessible by UI
+
  ## Current State of the Project
+Currently, the project has the bare-bones elements configured. As seen here, the GitHub repo has been established with CI/CD integrations. Additionally, the Azure configuration has been complete, and the current version of the webapp can be seen [here](https://sysc4806project.azurewebsites.net/). 
 
+In terms of implementation, the backend is configured as a Spring Boot app which exposes a read-only GET endpoint to list current library of books. This information is displayed via Svelte on the frontend, which fetches the books and displays a stylized grid of said books. 
+
+In regard to deployment, the frontend build is currently being copied into Spring Boot's static resources, from which a single JAR is created. We recognize this situation may not be ideal, and as such we have future plans to potentially address this process. 
+<div align="center">
+ <img width="800" alt="image" src="https://github.com/user-attachments/assets/1de3dd62-04cf-40aa-aed5-bf20039675b7" />
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/66d07112-e265-4e00-82de-1c39ffac60a8" />
+</div>
  ## Database Schema
- 
+The system uses a single `BOOKS` table to store all book information.  
+Each record represents one book listed in the bookstore.
 
+| Column Name | Type | Description |
+|--------------|------|-------------|
+| `isbn` | VARCHAR(20) **PK** | Unique identifier for each book |
+| `title` | VARCHAR(255) | Title of the book |
+| `author` | VARCHAR(255) | Name of the author |
+| `publisher` | VARCHAR(255) | Publisher of the book |
+| `genre` | VARCHAR(255) | Book genre (e.g., Fiction, Science, Biography) |
+| `price` | DOUBLE PRECISION | Price of the book |
+| `inventory` | INTEGER | Number of copies available |
+| `image_url` | VARCHAR(255) | URL of the book cover image |
+
+## UML Model
+<div align="center">
+<img width="400"" alt="image" src="https://github.com/user-attachments/assets/b8d048d5-4284-46df-b492-5272a31d62ed" />
+</div>
 
 ## The Team
 [Grant Phillips](https://github.com/grantphillips13) \
