@@ -1,15 +1,18 @@
 <script>
   import { onMount } from 'svelte';
+  import { createBook } from '../lib/api';
 
   export let data;
-  const books = data.initialBooks || [];
+  let books = data.initialBooks || [];
 
   let showAddBookModal = false;
+  let isSubmitting = false;
   let formData = {
     title: '',
     author: '',
     isbn: '',
     description: '',
+    genre: '',
     price: '',
     inventory: '',
     imageUrl: ''
@@ -38,6 +41,7 @@
       author: '',
       isbn: '',
       description: '',
+      genre: '',
       price: '',
       inventory: '',
       imageUrl: ''
@@ -54,14 +58,37 @@
       return;
     }
 
+    isSubmitting = true;
+
     try {
-      // TODO: Send form data to backend API
-      console.log('Adding book:', formData);
+      // Prepare the book data with proper types for the backend
+      const bookToAdd = {
+        isbn: formData.isbn,
+        title: formData.title,
+        author: formData.author,
+        genre: formData.genre || undefined,
+        price: parseFloat(formData.price),
+        inventory: parseInt(formData.inventory),
+        imageUrl: formData.imageUrl || undefined,
+        description: formData.description || undefined
+      };
+
+      // Call the backend API to create the book
+      // @ts-ignore
+      const newBook = await createBook(bookToAdd);
+
+      // Add the new book to the front of the list
+      books = [newBook, ...books];
+
+      // Show success message and close modal
       alert('Book added successfully!');
       closeAddBookModal();
     } catch (error) {
       console.error('Error adding book:', error);
-      alert('Failed to add book');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to add book: ${errorMessage}`);
+    } finally {
+      isSubmitting = false;
     }
   }
 
@@ -190,6 +217,16 @@
         </div>
 
         <div class="form-group">
+          <label for="genre">Genre</label>
+          <input
+            type="text"
+            id="genre"
+            bind:value={formData.genre}
+            placeholder="Enter book genre (e.g., Science Fiction)"
+          />
+        </div>
+
+        <div class="form-group">
           <label for="description">Description</label>
           <textarea
             id="description"
@@ -237,11 +274,11 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" on:click={closeAddBookModal}>
+          <button type="button" class="btn btn-secondary" on:click={closeAddBookModal} disabled={isSubmitting}>
             Cancel
           </button>
-          <button type="submit" class="btn btn-primary">
-            Add Book
+          <button type="submit" class="btn btn-primary" disabled={isSubmitting}>
+            {isSubmitting ? 'Adding...' : 'Add Book'}
           </button>
         </div>
       </form>

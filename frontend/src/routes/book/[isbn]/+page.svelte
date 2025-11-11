@@ -29,7 +29,12 @@
     </div>
     <div class="detail-text-section">
       {#if b.genre}
-        <p class="detail-description">{b.genre}</p>
+        <p class="detail-info-item">
+          <strong>Genre:</strong> {b.genre}
+        </p>
+      {/if}
+      {#if b.description}
+        <p class="detail-description">{b.description}</p>
       {:else}
         <p class="detail-description" style="color: var(--text-secondary); font-style: italic;">
           No description available for this book.
