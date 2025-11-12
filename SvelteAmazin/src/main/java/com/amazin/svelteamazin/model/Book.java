@@ -19,17 +19,6 @@ public class Book {
 
     public Book() {}
 
-    public Book(String isbn, String title, String author, String publisher,
-                String genre, double price, int inventory, String imageUrl) {
-        this.isbn = isbn;
-        this.title = title;
-        this.author = author;
-        this.publisher = publisher;
-        this.genre = genre;
-        this.price = price;
-        this.inventory = inventory;
-        this.imageUrl = imageUrl;
-    }
 
     public Book(String isbn, String title, String author, String publisher,
                 String genre, String description, double price, int inventory, String imageUrl) {
