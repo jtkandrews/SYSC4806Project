@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from 'svelte';
   import { createBook } from '../lib/api';
 
   export let data;
@@ -19,13 +18,6 @@
     imageUrl: ''
   };
 
-  onMount(() => {
-    if (books.length > 0) {
-      console.log('First book:', books[0]);
-      console.log('Has imageUrl?', books[0].imageUrl);
-      console.log('ImageUrl value:', books[0].imageUrl);
-    }
-  });
 
   function openAddBookModal() {
     showAddBookModal = true;
@@ -180,8 +172,6 @@
     }
     const newValue = parts.join('.');
     formData.price = newValue;
-    // Update the input field directly to prevent further input beyond 4 digits
-    e.target.value = newValue;
   }
 
   // @ts-ignore
@@ -190,8 +180,6 @@
     const input = e.target.value;
     const cleaned = input.replace(/\D/g, '').slice(0, 4);
     formData.inventory = cleaned;
-    // Update the input field directly to prevent further input beyond 4 digits
-    e.target.value = cleaned;
   }
 </script>
 
