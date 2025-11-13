@@ -103,10 +103,8 @@
         throw new Error('Failed to update book');
       }
 
-      const updatedBook = await response.json();
-
       // Update the book data and trigger reactivity
-      data.book = updatedBook;
+      data.book = await response.json();
 
       // Close modal
       isEditModalOpen = false;
