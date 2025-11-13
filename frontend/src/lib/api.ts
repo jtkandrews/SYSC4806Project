@@ -25,3 +25,14 @@ export async function searchBooks(query: string, fetchFn: typeof fetch = fetch):
     if (!res.ok) throw new Error(`Search failed (${res.status})`);
     return res.json();
 }
+
+export async function createBook(book: Partial<Book>, fetchFn: typeof fetch = fetch): Promise<Book> {
+    const res = await fetchFn(`${API_BASE}/api/books`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(book)
+    });
+    if (!res.ok) throw new Error(`Failed to create book (${res.status})`);
+    return res.json();
+}
+

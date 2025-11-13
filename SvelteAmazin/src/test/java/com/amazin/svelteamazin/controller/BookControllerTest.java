@@ -26,10 +26,12 @@ class BookControllerTest {
         bookController = new BookController(bookRepository);
         bookRepository.deleteAll();
 
-        Book book1 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown", "Astronaut stranded on Mars",
-                19.99, 5, "https://covers.openlibrary.org/b/isbn/ 9780804139021-L.jpg");
-        Book book2 = new Book("1234", "Test2", "Author", "pub", "genre",
+        Book book1 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown",
+                "Science Fiction", "Astronaut stranded on Mars", 19.99, 5, "https://covers.openlibrary.org/b/isbn/9780804139021-L.jpg");
+
+        Book book2 = new Book("1234", "Test2", "Author", "pub", "genre", null,
                 9.99, 3, "https://google.ca");
+
         bookRepository.save(book1);
         bookRepository.save(book2);
     }
@@ -74,7 +76,7 @@ class BookControllerTest {
         assertEquals(2, result.size());
 
         Book book2 = new Book("12343", "Test3", "Author3", "pub3", "genre3",
-                9.993, 33, "https://google.ca3");
+                "This is a test description", 9.993, 33, "https://google.ca3");
         bookRepository.save(book2);
 
 
@@ -85,7 +87,8 @@ class BookControllerTest {
         assertEquals("Test3", result2.get(2).getTitle());
         assertEquals("Author3", result2.get(2).getAuthor());
         assertEquals("pub3", result2.get(2).getPublisher());
-        assertEquals("genre3", result2.get(2).getDescription());
+        assertEquals("genre3", result2.get(2).getGenre());
+        assertEquals("This is a test description", result2.get(2).getDescription());
         assertEquals(9.993, result2.get(2).getPrice());
         assertEquals(33, result2.get(2).getInventory());
         assertEquals("https://google.ca3", result2.get(2).getImageUrl());
@@ -94,7 +97,7 @@ class BookControllerTest {
     @Test
     void upsert() {
         Book book2 = new Book("12343", "Test3", "Author3", "pub3", "genre3",
-                9.993, 33, "https://google.ca3");
+                "This is a test description", 9.993, 33, "https://google.ca3");
         bookRepository.save(book2);
 
         Book result = bookController.getBookByIsbn("12343");
@@ -102,7 +105,8 @@ class BookControllerTest {
         assertEquals("Test3", result.getTitle());
         assertEquals("Author3", result.getAuthor());
         assertEquals("pub3", result.getPublisher());
-        assertEquals("genre3", result.getDescription());
+        assertEquals("genre3", result.getGenre());
+        assertEquals("This is a test description", result.getDescription());
         assertEquals(9.993, result.getPrice());
         assertEquals(33, result.getInventory());
         assertEquals("https://google.ca3", result.getImageUrl());
@@ -113,7 +117,8 @@ class BookControllerTest {
         assertEquals("Test3", result2.getTitle());
         assertEquals("Author3", result2.getAuthor());
         assertEquals("pub3", result2.getPublisher());
-        assertEquals("genre3", result2.getDescription());
+        assertEquals("genre3", result2.getGenre());
+        assertEquals("This is a test description", result2.getDescription());
         assertEquals(9.993, result2.getPrice());
         assertEquals(33, result2.getInventory());
         assertEquals("https://google.ca3", result2.getImageUrl());
@@ -141,9 +146,9 @@ class BookControllerTest {
     @Test
     void testSearchBooksCaseInsensitiveAndLiveList() {
 
-        Book b1 = new Book("1", "Java Programming", "Alice Example", "Pub", "Desc", 10.0, 1, "www.1.com");
-        Book b2 = new Book("2", "Advanced Java", "Bob Example", "Pub", "Desc", 15.0, 2, "www.2.com");
-        Book b3 = new Book("3", "Python Guide", "Carol Example", "Pub", "Desc", 12.0, 3, "www.3.com");
+        Book b1 = new Book("1", "Java Programming", "Alice Example", "Pub", "Desc", "Learn Java", 10.0, 1, "www.1.com");
+        Book b2 = new Book("2", "Advanced Java", "Bob Example", "Pub", "Desc", "Advanced concepts", 15.0, 2, "www.2.com");
+        Book b3 = new Book("3", "Python Guide", "Carol Example", "Pub", "Desc", "Python tutorial", 12.0, 3, "www.3.com");
 
         bookRepository.save(b1);
         bookRepository.save(b2);

@@ -14,6 +14,7 @@ public class BookTest {
         book.setTitle("Test Title");
         book.setAuthor("Author Name");
         book.setPublisher("Publisher Name");
+        book.setGenre("Fiction");
         book.setDescription("Sample description");
         book.setPrice(19.99);
         book.setInventory(5);
@@ -23,6 +24,7 @@ public class BookTest {
         assertEquals("Test Title", book.getTitle());
         assertEquals("Author Name", book.getAuthor());
         assertEquals("Publisher Name", book.getPublisher());
+        assertEquals("Fiction", book.getGenre());
         assertEquals("Sample description", book.getDescription());
         assertEquals(19.99, book.getPrice(), 1e-6);
         assertEquals(5, book.getInventory());
@@ -32,23 +34,24 @@ public class BookTest {
     @Test
     void testAllArgsConstructor() {
         Book book = new Book("978-1-234567-89-7", "Another Title", "A. Author", "Some Publisher",
-                "Another description", 0.0, 0, "http://example.com/another.jpg");
+                "Genre", "Another description", 29.99, 5, "http://example.com/another.jpg");
 
         assertAll("book",
                 () -> assertEquals("978-1-234567-89-7", book.getIsbn()),
                 () -> assertEquals("Another Title", book.getTitle()),
                 () -> assertEquals("A. Author", book.getAuthor()),
                 () -> assertEquals("Some Publisher", book.getPublisher()),
+                () -> assertEquals("Genre", book.getGenre()),
                 () -> assertEquals("Another description", book.getDescription()),
-                () -> assertEquals(0.0, book.getPrice(), 1e-6),
-                () -> assertEquals(0, book.getInventory()),
-        () -> assertEquals("http://example.com/another.jpg", book.getImageUrl())
+                () -> assertEquals(29.99, book.getPrice(), 1e-6),
+                () -> assertEquals(5, book.getInventory()),
+                () -> assertEquals("http://example.com/another.jpg", book.getImageUrl())
         );
     }
 
     @Test
     void testMutability() {
-        Book book = new Book("isbn", "title", "author", "pub", "desc", 1.0, 10, "http://example.com/img.png");
+        Book book = new Book("isbn", "title", "author", "pub", "genre", "desc", 1.0, 10, "http://example.com/img.png");
         book.setPrice(2.5);
         book.setInventory(7);
 
