@@ -5,13 +5,15 @@
   let editFormData = {
     genre: data.book.genre || '',
     description: data.book.description || '',
-    imageUrl: data.book.imageUrl || '',
     price: data.book.price,
     inventory: data.book.inventory
   };
   let isSubmitting = false;
   let editError = '';
   let mouseDownTarget: EventTarget | null = null;
+
+  // Compute the image URL from the ISBN
+  $: imageUrl = `https://covers.openlibrary.org/b/isbn/${data.book.isbn}-L.jpg`;
 
   // Reactive declaration to update form data when book data changes
   $: if (data.book) {
@@ -20,7 +22,6 @@
       editFormData = {
         genre: data.book.genre || '',
         description: data.book.description || '',
-        imageUrl: data.book.imageUrl || '',
         price: data.book.price,
         inventory: data.book.inventory
       };
@@ -93,7 +94,7 @@
           publisher: data.book.publisher,
           genre: editFormData.genre,
           description: editFormData.description,
-          imageUrl: editFormData.imageUrl,
+          imageUrl: imageUrl,
           price: editFormData.price,
           inventory: editFormData.inventory
         })
@@ -120,7 +121,6 @@
     editFormData = {
       genre: data.book.genre || '',
       description: data.book.description || '',
-      imageUrl: data.book.imageUrl || '',
       price: data.book.price,
       inventory: data.book.inventory
     };
@@ -315,10 +315,11 @@
           <div class="form-group">
             <label for="imageUrl">Image URL</label>
             <input
-              type="url"
+              type="text"
               id="imageUrl"
-              bind:value={editFormData.imageUrl}
-              placeholder="https://example.com/image.jpg"
+              value={imageUrl}
+              disabled
+              readonly
             />
           </div>
 

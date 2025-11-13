@@ -14,8 +14,7 @@
     description: '',
     genre: '',
     price: '',
-    inventory: '',
-    imageUrl: ''
+    inventory: ''
   };
 
 
@@ -37,8 +36,7 @@
       description: '',
       genre: '',
       price: '',
-      inventory: '',
-      imageUrl: ''
+      inventory: ''
     };
   }
 
@@ -118,7 +116,7 @@
         genre: formData.genre || undefined,
         price: price,
         inventory: inventory,
-        imageUrl: formData.imageUrl || undefined,
+        imageUrl: `https://covers.openlibrary.org/b/isbn/${isbnDigits}-L.jpg`,
         description: formData.description || undefined
       };
 
@@ -369,16 +367,6 @@
               required
             />
           </div>
-        </div>
-
-        <div class="form-group">
-          <label for="imageUrl">Image URL</label>
-          <input
-            type="url"
-            id="imageUrl"
-            bind:value={formData.imageUrl}
-            placeholder="https://example.com/image.jpg"
-          />
         </div>
 
         <div class="modal-footer">
