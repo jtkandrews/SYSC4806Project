@@ -1,5 +1,6 @@
-<script>
+<script lang="ts">
   import { createBook } from '../lib/api';
+  import { role } from '$lib/session'; // 🔹 NEW: owner/user role store
 
   export let data;
   let books = data.initialBooks || [];
@@ -16,7 +17,6 @@
     price: '',
     inventory: ''
   };
-
 
   function openAddBookModal() {
     showAddBookModal = true;
@@ -188,12 +188,14 @@
         <h1 class="page-title">Browse Our Collection</h1>
         <p class="page-subtitle">Discover great books at amazin prices</p>
       </div>
-      <button class="btn btn-primary" on:click={openAddBookModal}>
-        ➕ Add Book
-      </button>
+
+      {#if $role === 'OWNER'}  <!-- 🔹 NEW: only owners see Add Book -->
+        <button class="btn btn-primary" on:click={openAddBookModal}>
+          ➕ Add Book
+        </button>
+      {/if}
     </div>
   </div>
-
 
   {#if books.length === 0}
     <div class="empty-state">
@@ -253,10 +255,16 @@
   {/if}
 </div>
 
-<!-- Add Book Modal -->
-{#if showAddBookModal}
+<!-- Add Book Modal (owner-only) -->
+{#if $role === 'OWNER' && showAddBookModal}  <!-- 🔹 NEW: guard modal too -->
   <!-- @ts-ignore -->
-  <div class="modal-backdrop" on:click={handleModalBackdropClick} on:keydown={e => e.key === 'Escape' && closeAddBookModal()} role="presentation" aria-labelledby="modal-title">
+  <div
+    class="modal-backdrop"
+    on:click={handleModalBackdropClick}
+    on:keydown={e => e.key === 'Escape' && closeAddBookModal()}
+    role="presentation"
+    aria-labelledby="modal-title"
+  >
     <div class="modal">
       <div class="modal-header">
         <h2 id="modal-title">Add New Book</h2>
@@ -381,4 +389,3 @@
     </div>
   </div>
 {/if}
-
