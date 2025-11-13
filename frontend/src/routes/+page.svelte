@@ -7,6 +7,7 @@
 
   let showAddBookModal = false;
   let isSubmitting = false;
+  let addError = '';
   let formData = {
     title: '',
     author: '',
@@ -33,6 +34,7 @@
   function closeAddBookModal() {
     showAddBookModal = false;
     resetForm();
+    addError = '';
   }
 
   function resetForm() {
@@ -51,10 +53,65 @@
   // @ts-ignore
   async function handleAddBook(e) {
     e.preventDefault();
+    addError = ''; // Clear any previous errors
 
     // Validate required fields
     if (!formData.title || !formData.author || !formData.isbn || !formData.price || !formData.inventory) {
-      alert('Please fill in all required fields');
+      addError = 'Please fill in all required fields';
+      return;
+    }
+
+    // Validate title length
+    if (formData.title.length > 150) {
+      addError = 'Title cannot exceed 150 characters';
+      return;
+    }
+
+    // Validate author length
+    if (formData.author.length > 100) {
+      addError = 'Author cannot exceed 100 characters';
+      return;
+    }
+
+    // Validate ISBN is exactly 13 digits
+    const isbnDigits = formData.isbn.replace(/\D/g, '');
+    if (isbnDigits.length !== 13) {
+      addError = 'ISBN must be exactly 13 digits';
+      return;
+    }
+
+    // Validate genre length
+    if (formData.genre.length > 100) {
+      addError = 'Genre cannot exceed 100 characters';
+      return;
+    }
+
+    // Validate description length
+    if (formData.description.length > 500) {
+      addError = 'Description cannot exceed 500 characters';
+      return;
+    }
+
+    // Validate price is greater than 0
+    const price = parseFloat(formData.price);
+    if (price <= 0) {
+      addError = 'Price must be greater than 0';
+      return;
+    }
+
+    // Validate price integer part is 4 digits max (before decimal)
+    const priceString = formData.price.toString();
+    const priceParts = priceString.split('.');
+    if (priceParts[0].length > 4) {
+      addError = 'Price cannot exceed 4 digits (max 9999.99)';
+      return;
+    }
+
+    // Validate inventory is 4 digits max
+    const inventory = parseInt(formData.inventory);
+    const inventoryString = formData.inventory.toString();
+    if (inventoryString.length > 4) {
+      addError = 'Inventory cannot exceed 4 digits (max 9999)';
       return;
     }
 
@@ -63,12 +120,12 @@
     try {
       // Prepare the book data with proper types for the backend
       const bookToAdd = {
-        isbn: formData.isbn,
+        isbn: isbnDigits, // Use the cleaned ISBN with only digits
         title: formData.title,
         author: formData.author,
         genre: formData.genre || undefined,
-        price: parseFloat(formData.price),
-        inventory: parseInt(formData.inventory),
+        price: price,
+        inventory: inventory,
         imageUrl: formData.imageUrl || undefined,
         description: formData.description || undefined
       };
@@ -86,7 +143,7 @@
     } catch (error) {
       console.error('Error adding book:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Failed to add book: ${errorMessage}`);
+      addError = `Failed to add book: ${errorMessage}`;
     } finally {
       isSubmitting = false;
     }
@@ -97,6 +154,44 @@
     if (e.target === e.currentTarget) {
       closeAddBookModal();
     }
+  }
+
+  // @ts-ignore
+  function handleIsbnInput(e) {
+    // Only allow digits and hyphens
+    const input = e.target.value;
+    formData.isbn = input.replace(/[^\d-]/g, '');
+  }
+
+  // @ts-ignore
+  function handlePriceInput(e) {
+    // Limit to 4 digits before decimal point (e.g., 9999.99)
+    const input = e.target.value;
+    // Remove non-numeric except decimal point
+    let cleaned = input.replace(/[^\d.]/g, '');
+    // Split by decimal point
+    const parts = cleaned.split('.');
+    // Limit integer part to 4 digits and decimal part to 2 digits
+    if (parts[0].length > 4) {
+      parts[0] = parts[0].slice(0, 4);
+    }
+    if (parts[1] && parts[1].length > 2) {
+      parts[1] = parts[1].slice(0, 2);
+    }
+    const newValue = parts.join('.');
+    formData.price = newValue;
+    // Update the input field directly to prevent further input beyond 4 digits
+    e.target.value = newValue;
+  }
+
+  // @ts-ignore
+  function handleInventoryInput(e) {
+    // Limit to 4 digits (max 9999)
+    const input = e.target.value;
+    const cleaned = input.replace(/\D/g, '').slice(0, 4);
+    formData.inventory = cleaned;
+    // Update the input field directly to prevent further input beyond 4 digits
+    e.target.value = cleaned;
   }
 </script>
 
@@ -183,54 +278,73 @@
       </div>
 
       <form on:submit={handleAddBook} class="modal-form">
+        {#if addError}
+          <div class="error-message">{addError}</div>
+        {/if}
+
         <div class="form-group">
-          <label for="title">Title <span class="required">*</span></label>
+          <label for="title">
+            <span>Title <span class="required">*</span></span>
+          </label>
           <input
             type="text"
             id="title"
             bind:value={formData.title}
+            maxlength="150"
             placeholder="Enter book title"
             required
           />
         </div>
 
         <div class="form-group">
-          <label for="author">Author <span class="required">*</span></label>
+          <label for="author">
+            <span>Author <span class="required">*</span></span>
+          </label>
           <input
             type="text"
             id="author"
             bind:value={formData.author}
+            maxlength="100"
             placeholder="Enter author name"
             required
           />
         </div>
 
         <div class="form-group">
-          <label for="isbn">ISBN <span class="required">*</span></label>
+          <label for="isbn">
+            <span>ISBN <span class="required">*</span></span>
+          </label>
           <input
             type="text"
             id="isbn"
             bind:value={formData.isbn}
-            placeholder="Enter ISBN (e.g., 978-0-123456-78-9)"
+            on:input={handleIsbnInput}
+            placeholder="Enter ISBN (e.g., 978-0-545-58289-5)"
             required
           />
         </div>
 
         <div class="form-group">
-          <label for="genre">Genre</label>
+          <label for="genre">
+            <span>Genre</span>
+          </label>
           <input
             type="text"
             id="genre"
             bind:value={formData.genre}
+            maxlength="100"
             placeholder="Enter book genre (e.g., Science Fiction)"
           />
         </div>
 
         <div class="form-group">
-          <label for="description">Description</label>
+          <label for="description">
+            <span>Description</span>
+          </label>
           <textarea
             id="description"
             bind:value={formData.description}
+            maxlength="500"
             placeholder="Enter book description"
             rows="4"
           ></textarea>
@@ -238,24 +352,30 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="price">Price (USD) <span class="required">*</span></label>
+            <label for="price">
+              <span>Price (USD) <span class="required">*</span></span>
+            </label>
             <input
               type="number"
               id="price"
               bind:value={formData.price}
+              on:input={handlePriceInput}
               placeholder="0.00"
               step="0.01"
-              min="0"
+              min="0.01"
               required
             />
           </div>
 
           <div class="form-group">
-            <label for="inventory">Inventory <span class="required">*</span></label>
+            <label for="inventory">
+              <span>Inventory <span class="required">*</span></span>
+            </label>
             <input
               type="number"
               id="inventory"
               bind:value={formData.inventory}
+              on:input={handleInventoryInput}
               placeholder="0"
               min="0"
               required

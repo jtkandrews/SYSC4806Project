@@ -42,6 +42,44 @@
     isSubmitting = true;
     editError = '';
 
+    // Validate genre length
+    if (editFormData.genre.length > 100) {
+      editError = 'Genre cannot exceed 100 characters';
+      isSubmitting = false;
+      return;
+    }
+
+    // Validate description length
+    if (editFormData.description.length > 500) {
+      editError = 'Description cannot exceed 500 characters';
+      isSubmitting = false;
+      return;
+    }
+
+    // Validate price is greater than 0
+    if (editFormData.price <= 0) {
+      editError = 'Price must be greater than 0';
+      isSubmitting = false;
+      return;
+    }
+
+    // Validate price integer part is 4 digits max (before decimal)
+    const priceString = editFormData.price.toString();
+    const priceParts = priceString.split('.');
+    if (priceParts[0].length > 4) {
+      editError = 'Price cannot exceed 4 digits (max 9999.99)';
+      isSubmitting = false;
+      return;
+    }
+
+    // Validate inventory is 4 digits max
+    const inventoryString = editFormData.inventory.toString();
+    if (inventoryString.length > 4) {
+      editError = 'Inventory cannot exceed 4 digits (max 9999)';
+      isSubmitting = false;
+      return;
+    }
+
     try {
       const response = await fetch(`/api/books/${data.book.isbn}`, {
         method: 'PUT',
@@ -95,6 +133,59 @@
   function closeEditModal() {
     isEditModalOpen = false;
     editError = '';
+  }
+
+  // @ts-ignore
+  function handleEditPriceInput(e) {
+    // Limit to 4 digits before decimal point (e.g., 9999.99)
+    const input = e.target.value;
+
+    // Allow empty input - don't update editFormData
+    if (input === '' || input === null) {
+      return;
+    }
+
+    // Remove non-numeric except decimal point
+    let cleaned = input.replace(/[^\d.]/g, '');
+    // Split by decimal point
+    const parts = cleaned.split('.');
+    // Limit integer part to 4 digits and decimal part to 2 digits
+    if (parts[0].length > 4) {
+      parts[0] = parts[0].slice(0, 4);
+    }
+    if (parts[1] && parts[1].length > 2) {
+      parts[1] = parts[1].slice(0, 2);
+    }
+
+    // Only update if we have valid digits
+    if (parts[0] !== '') {
+      const newValue = parseFloat(parts.join('.'));
+      if (!isNaN(newValue)) {
+        editFormData.price = newValue;
+      }
+    }
+  }
+
+
+  // @ts-ignore
+  function handleEditInventoryInput(e) {
+    // Limit to 4 digits (max 9999)
+    const input = e.target.value;
+
+    // Allow empty input - don't update editFormData
+    if (input === '' || input === null) {
+      return;
+    }
+
+    const cleaned = input.replace(/\D/g, '').slice(0, 4);
+
+    // Only update if we have valid digits
+    if (cleaned !== '') {
+      const newValue = parseInt(cleaned);
+      if (!isNaN(newValue)) {
+        editFormData.inventory = newValue;
+      }
+    }
   }
 </script>
 
@@ -198,20 +289,26 @@
 
         <form on:submit|preventDefault={handleSaveEdit}>
           <div class="form-group">
-            <label for="genre">Genre</label>
+            <label for="genre">
+              <span>Genre</span>
+            </label>
             <input
               type="text"
               id="genre"
               bind:value={editFormData.genre}
+              maxlength="100"
               placeholder="e.g., Fiction, Non-Fiction, Science Fiction"
             />
           </div>
 
           <div class="form-group">
-            <label for="description">Description</label>
+            <label for="description">
+              <span>Description</span>
+            </label>
             <textarea
               id="description"
               bind:value={editFormData.description}
+              maxlength="500"
               placeholder="Enter a description of the book"
               rows="5"
             ></textarea>
@@ -229,11 +326,14 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="price">Price</label>
+              <label for="price">
+                <span>Price</span>
+              </label>
               <input
                 type="number"
                 id="price"
                 bind:value={editFormData.price}
+                on:input={handleEditPriceInput}
                 step="0.01"
                 min="0.01"
                 required
@@ -241,11 +341,14 @@
             </div>
 
             <div class="form-group">
-              <label for="inventory">Inventory</label>
+              <label for="inventory">
+                <span>Inventory</span>
+              </label>
               <input
                 type="number"
                 id="inventory"
                 bind:value={editFormData.inventory}
+                on:input={handleEditInventoryInput}
                 step="1"
                 min="0"
                 required
