@@ -1,6 +1,10 @@
+
 <script lang="ts">
   import { createBook } from '../lib/api';
   import { role } from '$lib/session'; // 🔹 NEW: owner/user role store
+<script>
+
+
 
   export let data;
   let books = data.initialBooks || [];
@@ -17,6 +21,7 @@
     price: '',
     inventory: ''
   };
+
 
   function openAddBookModal() {
     showAddBookModal = true;
@@ -165,6 +170,28 @@
     if (parts[0].length > 4) {
       parts[0] = parts[0].slice(0, 4);
     }
+    }
+  }
+
+  // @ts-ignore
+  function handleIsbnInput(e) {
+    // Only allow digits and hyphens
+    const input = e.target.value;
+    formData.isbn = input.replace(/[^\d-]/g, '');
+  }
+
+  // @ts-ignore
+  function handlePriceInput(e) {
+    // Limit to 4 digits before decimal point (e.g., 9999.99)
+    const input = e.target.value;
+    // Remove non-numeric except decimal point
+    let cleaned = input.replace(/[^\d.]/g, '');
+    // Split by decimal point
+    const parts = cleaned.split('.');
+    // Limit integer part to 4 digits and decimal part to 2 digits
+    if (parts[0].length > 4) {
+      parts[0] = parts[0].slice(0, 4);
+    }
     if (parts[1] && parts[1].length > 2) {
       parts[1] = parts[1].slice(0, 2);
     }
@@ -188,6 +215,11 @@
         <h1 class="page-title">Browse Our Collection</h1>
         <p class="page-subtitle">Discover great books at amazin prices</p>
       </div>
+      <button class="btn btn-primary" on:click={openAddBookModal}>
+        ➕ Add Book
+      </button>
+    </div>
+  </div>
 
       {#if $role === 'OWNER'}  <!-- 🔹 NEW: only owners see Add Book -->
         <button class="btn btn-primary" on:click={openAddBookModal}>
