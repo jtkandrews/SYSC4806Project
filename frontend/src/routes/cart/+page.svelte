@@ -1,7 +1,7 @@
 <script lang="ts">
   import { role } from '$lib/session';
   import { booksStore } from '$lib/stores/books';
-  import { cartStore, cartItemCount, cartTotalCost, checkout, removeFromCart } from '$lib/stores/cart';
+  import { cartStore, cartItemCount, cartTotalCost, checkout, removeFromCart, updateCartItemQuantity } from '$lib/stores/cart';
   import { derived } from 'svelte/store';
 
   const cartWithInventory = derived([cartStore, booksStore], ([$cart, $books]) =>
@@ -18,7 +18,7 @@
   let successMessage = '';
   let isCheckingOut = false;
 
-  function handleCheckout() {
+  async function handleCheckout() {
     if ($role !== 'USER') {
       errorMessage = 'Only regular users can check out.';
       return;
@@ -29,12 +29,55 @@
     isCheckingOut = true;
 
     try {
-      checkout();
+      await checkout();
       successMessage = 'Checkout complete! Your books are on the way.';
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : 'Checkout failed.';
     } finally {
       isCheckingOut = false;
+    }
+  }
+
+  function setItemQuantity(isbn: string, quantity: number) {
+    errorMessage = '';
+    successMessage = '';
+
+    try {
+      updateCartItemQuantity(isbn, quantity);
+      return true;
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : 'Unable to update quantity.';
+      return false;
+    }
+  }
+
+  function incrementQuantity(isbn: string, current: number, available: number) {
+    if (current >= available) {
+      errorMessage = `Only ${available} copies remain in stock.`;
+      return;
+    }
+    setItemQuantity(isbn, current + 1);
+  }
+
+  function decrementQuantity(isbn: string, current: number) {
+    if (current === 1) {
+      removeFromCart(isbn);
+      return;
+    }
+    setItemQuantity(isbn, current - 1);
+  }
+
+  function handleQuantityChange(event: Event, isbn: string, current: number) {
+    const target = event.target as HTMLInputElement;
+    const next = parseInt(target.value, 10);
+
+    if (!Number.isNaN(next)) {
+      const success = setItemQuantity(isbn, next);
+      if (!success) {
+        target.value = current.toString();
+      }
+    } else {
+      target.value = current.toString();
     }
   }
 </script>
@@ -71,7 +114,32 @@
           </div>
           <div class="cart-item-details">
             <h2>{item.title}</h2>
-            <p>Quantity: {item.quantity}</p>
+            <div class="quantity-controls">
+              <button
+                class="quantity-button"
+                aria-label={`Decrease quantity of ${item.title}`}
+                on:click={() => decrementQuantity(item.isbn, item.quantity)}
+                disabled={item.quantity <= 1}
+              >
+                −
+              </button>
+              <input
+                class="quantity-input"
+                type="number"
+                min="1"
+                max={Math.max(item.available, 1)}
+                value={item.quantity}
+                on:change={(event) => handleQuantityChange(event, item.isbn, item.quantity)}
+              />
+              <button
+                class="quantity-button"
+                aria-label={`Increase quantity of ${item.title}`}
+                on:click={() => incrementQuantity(item.isbn, item.quantity, item.available)}
+                disabled={item.quantity >= item.available}
+              >
+                +
+              </button>
+            </div>
             <p>
               Item total:
               {(item.quantity * item.price).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
@@ -186,6 +254,44 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+   .quantity-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .quantity-button {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    border: none;
+    background: #e5e7eb;
+    color: #111827;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .quantity-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .quantity-button:not(:disabled):hover {
+    background: #d1d5db;
+  }
+
+  .quantity-input {
+    width: 4rem;
+    text-align: center;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
   }
 
   .cart-item-details h2 {

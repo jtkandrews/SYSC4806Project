@@ -24,8 +24,8 @@
 
 <header>
   <nav class="flex justify-between items-center px-6 py-4 bg-white shadow">
-    <a href="/" class="text-blue-700 font-semibold text-lg">
-      Amazin Bookstore
+    <a href="/" class="logo" aria-label="Amazin Bookstore home">
+      <img src="/amazin.png" alt="Amazin Bookstore logo" class="logo-image" width="140" />
     </a>
 
     <div class="flex items-center gap-3 text-sm">
