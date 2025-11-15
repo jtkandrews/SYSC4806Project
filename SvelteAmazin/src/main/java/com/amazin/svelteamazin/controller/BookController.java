@@ -65,6 +65,40 @@ public class BookController {
     }
 
     /**
+     * GET /api/books/filter
+     * Filter books by genre and/or price range.
+     * Example: /api/books/filter?genre=Fiction&minPrice=10&maxPrice=30
+     */
+    @GetMapping("/filter")
+    public List<Book> filterBooks(
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice
+    ) {
+        List<Book> books = repo.findAll();
+
+        if (genre != null && !genre.isBlank()) {
+            books = books.stream()
+                    .filter(b -> b.getGenre() != null && b.getGenre().equalsIgnoreCase(genre))
+                    .toList();
+        }
+
+        if (minPrice != null) {
+            books = books.stream()
+                    .filter(b -> b.getPrice() >= minPrice)
+                    .toList();
+        }
+
+        if (maxPrice != null) {
+            books = books.stream()
+                    .filter(b -> b.getPrice() <= maxPrice)
+                    .toList();
+        }
+
+        return books;
+    }
+
+    /**
      * POST /api/books
      * Create a new book (or overwrite if ISBN exists).
      */
