@@ -1,13 +1,20 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { createBook } from '../lib/api';
   import { role } from '$lib/session';
+  import { addToCart, cartItemCount } from '$lib/stores/cart';
+  import { addBookToStore, booksStore, setBooks } from '$lib/stores/books';
+  import type { Book } from '$lib/types';
 
   export let data;
-  let books = data.initialBooks || [];
+  setBooks(data.initialBooks || [])
 
   let showAddBookModal = false;
   let isSubmitting = false;
   let addError = '';
+  let cartMessage = '';
+  let cartError = '';
+  let cartMessageTimeout: ReturnType<typeof setTimeout> | null = null;
 
   let formData = {
     title: '',
@@ -123,7 +130,8 @@
       // @ts-ignore
       const newBook = await createBook(bookToAdd);
 
-      books = [newBook, ...books];
+      // books = [newBook, ...books];
+      addBookToStore(newBook)
       alert('Book added successfully!');
       closeAddBookModal();
     } catch (error) {
@@ -171,6 +179,33 @@
     const cleaned = input.replace(/\D/g, '').slice(0, 4);
     formData.inventory = cleaned;
   }
+  function clearCartMessageTimeout() {
+    if (cartMessageTimeout) {
+      clearTimeout(cartMessageTimeout);
+      cartMessageTimeout = null;
+    }
+  }
+
+  function handleAddToCart(book: Book) {
+    cartError = '';
+    cartMessage = '';
+    clearCartMessageTimeout();
+
+    try {
+      addToCart(book);
+      cartMessage = `Added "${book.title}" to your cart.`;
+      cartMessageTimeout = setTimeout(() => {
+        cartMessage = '';
+        cartMessageTimeout = null;
+      }, 2500);
+    } catch (error) {
+      cartError = error instanceof Error ? error.message : 'Unable to add book to cart.';
+    }
+  }
+
+  onDestroy(() => {
+    clearCartMessageTimeout();
+  });
 </script>
 
 <div class="container">
@@ -185,18 +220,34 @@
         <button class="btn btn-primary" on:click={openAddBookModal}>
           ➕ Add Book
         </button>
+        {:else}
+        <div class="header-actions">
+          <a href="/cart" class="btn btn-secondary">
+            🛒 View Cart ({$cartItemCount})
+          </a>
+        </div>
       {/if}
     </div>
   </div>
 
-  {#if books.length === 0}
+  <!-- {#if books.length === 0} -->
+  {#if cartMessage}
+    <div class="cart-feedback success">{cartMessage}</div>
+  {/if}
+
+  {#if cartError}
+    <div class="cart-feedback error">{cartError}</div>
+  {/if}
+
+  {#if $booksStore.length === 0}
     <div class="empty-state">
       <h2 class="empty-state-title">No books available</h2>
       <p class="empty-state-text">Check back soon for new arrivals!</p>
     </div>
   {:else}
     <div class="books-grid">
-      {#each books as book}
+      <!-- {#each books as book} -->
+      {#each $booksStore as book}
         <div class="book-card">
           <a href={`/book/${book.isbn}`} class="book-card-link">
             {#if book.imageUrl?.trim()}
@@ -234,15 +285,15 @@
               {/if}
             </div>
 
-            <button
-                    class="btn btn-primary btn-add-cart"
-                    disabled={book.inventory === 0}
-                    on:click|stopPropagation|preventDefault={() => {
-                // TODO: Add to cart functionality
-              }}
-            >
-              Add to Cart
-            </button>
+            {#if $role === 'USER'}
+              <button
+                      class="btn btn-primary btn-add-cart"
+                      disabled={book.inventory === 0}
+                      on:click|stopPropagation|preventDefault={() => handleAddToCart(book)}
+              >
+                Add to Cart
+              </button>
+            {/if}
           </div>
         </div>
       {/each}
@@ -390,3 +441,29 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .header-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  .cart-feedback {
+    margin: 0 0 1rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .cart-feedback.success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  .cart-feedback.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+</style>

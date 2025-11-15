@@ -1,6 +1,7 @@
 <script lang="ts">
   import '../app.css';
   import { role, refreshRole, ownerLogin, logout } from '$lib/session';
+  import { cartItemCount } from '$lib/stores/cart';
   import { onMount } from 'svelte';
 
   let pw = '';
@@ -40,6 +41,7 @@
           Logout
         </button>
       {:else}
+        <a href="/cart" class="underline">Cart ({$cartItemCount})</a>
         <span class="text-gray-700">Role: USER</span>
         <input
                 type="password"
