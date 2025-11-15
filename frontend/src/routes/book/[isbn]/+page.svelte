@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { role } from '$lib/session'; // 🔹 NEW: role store
+
   export let data;
 
   let isEditModalOpen = false;
@@ -82,11 +84,12 @@
     }
 
     try {
-      const response = await fetch(`/api/books/${data.book.isbn}`, {
+      const response = await fetch(`/api/owner/books/${data.book.isbn}`, { // 🔹 changed path to owner
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // 🔹 include cookie for owner auth
         body: JSON.stringify({
           isbn: data.book.isbn,
           title: data.book.title,
@@ -164,7 +167,6 @@
     }
   }
 
-
   // @ts-ignore
   function handleEditInventoryInput(e) {
     // Limit to 4 digits (max 9999)
@@ -193,9 +195,12 @@
       <span>←</span>
       <span>Back to Books</span>
     </a>
-    <button class="btn btn-secondary" on:click={openEditModal}>
-      ✎ Edit
-    </button>
+
+    {#if $role === 'OWNER'}  <!-- 🔹 only owners see Edit button -->
+      <button class="btn btn-secondary" on:click={openEditModal}>
+        ✎ Edit
+      </button>
+    {/if}
   </div>
 
   <div class="detail-header">
@@ -263,7 +268,7 @@
   </div>
 </div>
 
-{#if isEditModalOpen}
+{#if $role === 'OWNER' && isEditModalOpen}  <!-- 🔹 owner-only edit modal -->
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions a11y-click-events-have-key-events -->
   <div
     class="modal-overlay"

@@ -27,7 +27,7 @@ export async function searchBooks(query: string, fetchFn: typeof fetch = fetch):
 }
 
 export async function createBook(book: Partial<Book>, fetchFn: typeof fetch = fetch): Promise<Book> {
-    const res = await fetchFn(`${API_BASE}/api/books`, {
+    const res = await fetchFn(`${API_BASE}/api/owner/books`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(book)
