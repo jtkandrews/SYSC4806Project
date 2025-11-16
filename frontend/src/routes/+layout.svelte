@@ -1,6 +1,7 @@
 <script lang="ts">
   import '../app.css';
   import { role, refreshRole, ownerLogin, logout } from '$lib/session';
+  import { cartItemCount } from '$lib/stores/cart';
   import { onMount } from 'svelte';
 
   let pw = '';
@@ -23,8 +24,8 @@
 
 <header>
   <nav class="flex justify-between items-center px-6 py-4 bg-white shadow">
-    <a href="/" class="text-blue-700 font-semibold text-lg">
-      Amazin Bookstore
+    <a href="/" class="logo" aria-label="Amazin Bookstore home">
+      <img src="/amazin.png" alt="Amazin Bookstore logo" class="logo-image" width="140" />
     </a>
 
     <div class="flex items-center gap-3 text-sm">
@@ -40,6 +41,7 @@
           Logout
         </button>
       {:else}
+        <a href="/cart" class="underline">Cart ({$cartItemCount})</a>
         <span class="text-gray-700">Role: USER</span>
         <input
                 type="password"

@@ -1,5 +1,10 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { derived } from 'svelte/store';
   import { role } from '$lib/session'; // 🔹 NEW: role store
+  import { addToCart } from '$lib/stores/cart';
+  import { booksStore } from '$lib/stores/books';
+  import type { Book } from '$lib/types';
 
   export let data;
 
@@ -13,9 +18,64 @@
   let isSubmitting = false;
   let editError = '';
   let mouseDownTarget: EventTarget | null = null;
+  let addToCartQuantity = 1;
+  let addToCartError = '';
+  let addToCartSuccess = '';
 
   // Compute the image URL from the ISBN
   $: imageUrl = `https://covers.openlibrary.org/b/isbn/${data.book.isbn}-L.jpg`;
+
+  const bookFromStore = derived(booksStore, ($books) => $books.find((book) => book.isbn === data.book.isbn));
+  let currentBook: Book = data.book;
+
+  $: currentBook = $bookFromStore ?? data.book;
+
+  onMount(() => {
+    booksStore.update((current) => {
+      const index = current.findIndex((book) => book.isbn === data.book.isbn);
+      if (index === -1) {
+        return [...current, data.book];
+      }
+      const updated = [...current];
+      updated[index] = { ...updated[index], ...data.book };
+      return updated;
+    });
+  });
+
+  $: {
+    const maxQuantity = Math.max(currentBook.inventory, 1);
+    if (addToCartQuantity > maxQuantity) {
+      addToCartQuantity = maxQuantity;
+    }
+    if (addToCartQuantity < 1) {
+      addToCartQuantity = 1;
+    }
+  }
+
+  function decreaseAddToCartQuantity() {
+    if (addToCartQuantity > 1) {
+      addToCartQuantity -= 1;
+    }
+  }
+
+  function increaseAddToCartQuantity() {
+    if (addToCartQuantity < currentBook.inventory) {
+      addToCartQuantity += 1;
+    }
+  }
+
+  function handleAddToCart() {
+    addToCartError = '';
+    addToCartSuccess = '';
+
+    try {
+      addToCart(currentBook, addToCartQuantity);
+      const copyText = addToCartQuantity === 1 ? 'copy' : 'copies';
+      addToCartSuccess = `Added ${addToCartQuantity} ${copyText} of "${currentBook.title}" to your cart.`;
+    } catch (error) {
+      addToCartError = error instanceof Error ? error.message : 'Unable to add book to cart.';
+    }
+  }
 
   // Reactive declaration to update form data when book data changes
   $: if (data.book) {
@@ -109,6 +169,9 @@
 
       // Update the book data and trigger reactivity
       data.book = await response.json();
+      booksStore.update((current) =>
+        current.map((book) => (book.isbn === data.book.isbn ? data.book : book))
+      );
 
       // Close modal
       isEditModalOpen = false;
@@ -204,17 +267,17 @@
   </div>
 
   <div class="detail-header">
-    <h1 class="detail-title">{data.book.title}</h1>
-    <p class="detail-author">by {data.book.author}</p>
-    {#if data.book.publisher}
-      <p class="detail-meta">Published by {data.book.publisher}</p>
+    <h1 class="detail-title">{currentBook.title}</h1>
+    <p class="detail-author">by {currentBook.author}</p>
+    {#if currentBook.publisher}
+      <p class="detail-meta">Published by {currentBook.publisher}</p>
     {/if}
   </div>
 
   <div class="detail-content">
     <div class="detail-image-section">
-      {#if data.book.imageUrl}
-        <img src={data.book.imageUrl} alt="{data.book.title} cover" class="detail-image" />
+      {#if currentBook.imageUrl}
+        <img src={currentBook.imageUrl} alt="{currentBook.title} cover" class="detail-image" />
       {:else}
         <div class="detail-image-placeholder">
           <span>📚</span>
@@ -222,13 +285,13 @@
       {/if}
     </div>
     <div class="detail-text-section">
-      {#if data.book.genre}
+      {#if currentBook.genre}
         <p class="detail-info-item">
-          <strong>Genre:</strong> {data.book.genre}
+          <strong>Genre:</strong> {currentBook.genre}
         </p>
       {/if}
-      {#if data.book.description}
-        <p class="detail-description">{data.book.description}</p>
+      {#if currentBook.description}
+        <p class="detail-description">{currentBook.description}</p>
       {:else}
         <p class="detail-description" style="color: var(--text-secondary); font-style: italic;">
           No description available for this book.
@@ -239,31 +302,68 @@
     <div class="detail-price-section">
       <div class="detail-price-info">
         <p class="detail-price">
-          {data.book.price.toLocaleString(undefined, {style: 'currency', currency: 'USD'})}
+          {currentBook.price.toLocaleString(undefined, {style: 'currency', currency: 'USD'})}
         </p>
         <div class="detail-info">
           <p class="detail-info-item">
-            <strong>ISBN:</strong> {data.book.isbn}
+            <strong>ISBN:</strong> {currentBook.isbn}
           </p>
           <p class="detail-info-item">
             <strong>Stock:</strong>
-            {#if data.book.inventory > 0}
-              <span style="color: #10b981;">{data.book.inventory} {data.book.inventory === 1 ? 'copy' : 'copies'} available</span>
+            {#if currentBook.inventory > 0}
+              <span style="color: #10b981;">{currentBook.inventory} {currentBook.inventory === 1 ? 'copy' : 'copies'} available</span>
             {:else}
               <span style="color: #ef4444;">Out of stock</span>
             {/if}
           </p>
         </div>
       </div>
-      <button
-        class="btn btn-primary btn-add-cart-large"
-        disabled={data.book.inventory === 0}
-        on:click|preventDefault={() => {
-          // TODO: Add to cart functionality
-        }}
-      >
-        Add to Cart
-      </button>
+      {#if $role !== 'OWNER'}
+        {#if addToCartError}
+          <div class="cart-feedback error">{addToCartError}</div>
+        {/if}
+        {#if addToCartSuccess}
+          <div class="cart-feedback success">{addToCartSuccess}</div>
+        {/if}
+        <div class="detail-cart-actions">
+          <div class="detail-quantity">
+            <span class="detail-quantity-label">Quantity</span>
+            <div class="detail-quantity-controls">
+              <button
+                class="detail-quantity-button"
+                on:click={decreaseAddToCartQuantity}
+                aria-label="Decrease quantity"
+                type="button"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min="1"
+                max={Math.max(currentBook.inventory, 1)}
+                bind:value={addToCartQuantity}
+                class="detail-quantity-input"
+              />
+              <button
+                class="detail-quantity-button"
+                on:click={increaseAddToCartQuantity}
+                aria-label="Increase quantity"
+                type="button"
+                disabled={addToCartQuantity >= currentBook.inventory}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <button
+            class="btn btn-primary btn-add-cart-large"
+            disabled={currentBook.inventory === 0}
+            on:click|preventDefault={handleAddToCart}
+          >
+            Add to Cart
+          </button>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
@@ -373,3 +473,80 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .detail-cart-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .detail-quantity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .detail-quantity-label {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .detail-quantity-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .detail-quantity-button {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    border: none;
+    background: #e5e7eb;
+    color: #111827;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .detail-quantity-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .detail-quantity-button:not(:disabled):hover {
+    background: #d1d5db;
+  }
+
+  .detail-quantity-input {
+    width: 4rem;
+    text-align: center;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+  }
+
+  .cart-feedback {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .cart-feedback.success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  .cart-feedback.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+</style>
