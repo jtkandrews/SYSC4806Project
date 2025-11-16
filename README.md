@@ -86,9 +86,9 @@ Each record represents one book listed in the bookstore.
 - [x] Added a protected user and owner mode
 - [x] Added the ability for the protected owner mode to add and edit book details
 
-## Plan for Sprint 2 
+## Plan for Sprint 3
 - [ ] Add User accounts
-- [ ] 
+- [ ] Improve UI
 
  ## Current State of the Project
 After Milestone 2 our project now has:
@@ -124,7 +124,7 @@ Each record represents one book listed in the bookstore.
 
 ## UML Model
 <div align="center">
-<img width="619" height="1183" alt="Screenshot 2025-11-16 155534" src="https://github.com/user-attachments/assets/d739992f-f687-4661-b211-f795b2e8953d" />
+<img width="400" alt="Screenshot 2025-11-16 155534" src="https://github.com/user-attachments/assets/d739992f-f687-4661-b211-f795b2e8953d" />
 </div>
 
 </details>
