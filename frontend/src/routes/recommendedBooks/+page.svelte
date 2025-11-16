@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {onMount} from "svelte";
+    import { onMount, onDestroy } from "svelte";
 
     const DISPLAY_COUNT = 8;
 
@@ -7,32 +7,56 @@
     let books = data.initialBooks || [];
 
     let bookIndex = 0;
-    let timer;
+    let timer: number;
+
+    const handleKey = (e: KeyboardEvent) => {
+        if (e.key === "ArrowLeft") prevBook();
+        if (e.key === "ArrowRight") nextBook();
+    };
 
     // Start slideshow
     onMount(() => {
         changeBook(0);
         timer = setInterval(myTimer, 5000);
+
+        window.addEventListener("keydown", handleKey);
     });
 
     function myTimer() {
         bookIndex++;
     }
 
+    //this causes a race condition  that needs to be fixed
+    // function resetTimer() {
+    //     clearInterval(timer);
+    //     timer = setInterval(myTimer, 5000);
+    // }
+
     function nextBook() {
         bookIndex++;
+        // resetTimer();
     }
 
     function prevBook() {
         bookIndex--;
+        // resetTimer();
     }
 
     function changeBook(n: number) {
         bookIndex = n;
+        // resetTimer();
     }
 
     //On variable change it will change variable value to be within bounds of 0 and display_count
     $: normalizedIndex = ((bookIndex % DISPLAY_COUNT) + DISPLAY_COUNT) % DISPLAY_COUNT;
+
+    onDestroy(() => {
+        if (timer) {
+            clearInterval(timer);
+            timer = 0;
+        }
+        window.removeEventListener("keydown", handleKey);
+    });
 </script>
 
 <style>
@@ -210,17 +234,28 @@
         width: 12.5%;
     }
 
-    /* Add a transparency effect for thumbnail images */
-    .thumbnail {
+    /* Style the thumbnail button wrapper */
+    .thumbnail-button {
+        padding: 0;             /* remove default button padding */
+        border: none;           /* remove button border */
+        background: none;       /* remove default button background */
+        cursor: pointer;
+        height: 100%;           /* match the row/column height */
+        width: 100%;            /* match the column width */
+        display: block;         /* ensure it behaves like a block for layout */
+    }
+
+    /* The image inside the button keeps original styling */
+    .thumbnail-button img {
         height: 100%;
         width: 100%;
         opacity: 0.6;
         object-fit: fill;
     }
 
-    /* Hovering over thumbnails make change opacity to opaque */
-    .active,
-    .thumbnail:hover {
+    /* Hover/active effect remains the same */
+    .thumbnail-button.active img,
+    .thumbnail-button img:hover {
         opacity: 1;
     }
 </style>
@@ -253,7 +288,7 @@
                 <p><strong>Genre:</strong> {book.genre}</p>
                 <p><strong>Publisher:</strong> {book.publisher}</p>
                 <p><strong>Description:</strong> {book.description}</p>
-                <p class="price">{book.price}</p>
+                <p class="price">${book.price}</p>
 
                 <div class="button-container">
                     <form action="/api/cart" method="post">
@@ -288,12 +323,11 @@
     <div class="row">
         {#each books.slice(0,8) as book, i}
             <div class="column">
-                <img
-                        class="thumbnail cursor {i === normalizedIndex ? 'active' : ''}"
-                        src={book.imageUrl}
-                        alt={book.title}
-                        on:click={() => changeBook(i)}
-                />
+                <button type="button"
+                        class="thumbnail-button {i === normalizedIndex ? 'active' : ''}"
+                        on:click={() => changeBook(i)} >
+                    <img src={book.imageUrl} alt={book.title} />
+                </button>
             </div>
         {/each}
     </div>
