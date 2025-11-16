@@ -82,7 +82,7 @@ Each record represents one book listed in the bookstore.
  
 ## Objectives Completed
 - [x] Checkout Feature Completed
-- [x] Began development for book reccomendations
+- [x] Began development for book recommendations
 - [x] Added a protected user and owner mode
 - [x] Added the ability for the protected owner mode to add and edit book details
 
@@ -95,7 +95,7 @@ After Milestone 2 our project now has:
 - Protected User and Owner roles
 - Users can checkout books and Owners can edit book details, including stock and add books.
 - A Checkout feature with inventory tracking (to be expanded upon for Milestone 3)
-- A reccomended list of books
+- A recommended list of books
 The current version of the webapp can be seen [here](https://sysc4806project.azurewebsites.net/). 
 
 In terms of implementation, the backend is configured as a Spring Boot app which exposes a read-only GET endpoint to list current library of books. This information is displayed via Svelte on the frontend, which fetches the books and displays a stylized grid of said books. 
@@ -116,6 +116,7 @@ Each record represents one book listed in the bookstore.
 | `title` | VARCHAR(255) | Title of the book |
 | `author` | VARCHAR(255) | Name of the author |
 | `publisher` | VARCHAR(255) | Publisher of the book |
+| `description` | VARCHAR(255) | Description of the book |
 | `genre` | VARCHAR(255) | Book genre (e.g., Fiction, Science, Biography) |
 | `price` | DOUBLE PRECISION | Price of the book |
 | `inventory` | INTEGER | Number of copies available |
@@ -123,7 +124,7 @@ Each record represents one book listed in the bookstore.
 
 ## UML Model
 <div align="center">
-<img width="400"" alt="image" src="https://github.com/user-attachments/assets/b8d048d5-4284-46df-b492-5272a31d62ed" />
+<img width="619" height="1183" alt="Screenshot 2025-11-16 155534" src="https://github.com/user-attachments/assets/d739992f-f687-4661-b211-f795b2e8953d" />
 </div>
 
 </details>
