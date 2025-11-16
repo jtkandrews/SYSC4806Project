@@ -5,6 +5,29 @@
   export let data;
   let books = data.initialBooks || [];
 
+  // Sorting and filtering
+  let sortField = '';
+  let sortOrder = 'asc';
+  let genre = '';
+  let minPrice = '';
+  let maxPrice = '';
+
+  async function applyFilters() {
+    let url = '/api/books?';
+    if (sortField) url += `sort=${sortField}&order=${sortOrder}&`;
+    if (genre) url += `genre=${encodeURIComponent(genre)}&`;
+    if (minPrice) url += `minPrice=${minPrice}&`;
+    if (maxPrice) url += `maxPrice=${maxPrice}&`;
+
+    try {
+      const res = await fetch(url);
+      books = await res.json();
+    } catch (err) {
+      console.error('Error fetching books:', err);
+    }
+  }
+
+  // Add book modal
   let showAddBookModal = false;
   let isSubmitting = false;
   let addError = '';
@@ -41,68 +64,18 @@
     };
   }
 
-  // @ts-ignore
   async function handleAddBook(e) {
     e.preventDefault();
     addError = '';
 
-    // Required fields
     if (!formData.title || !formData.author || !formData.isbn || !formData.price || !formData.inventory) {
       addError = 'Please fill in all required fields';
       return;
     }
 
-    // Title length
-    if (formData.title.length > 150) {
-      addError = 'Title cannot exceed 150 characters';
-      return;
-    }
-
-    // Author length
-    if (formData.author.length > 100) {
-      addError = 'Author cannot exceed 100 characters';
-      return;
-    }
-
-    // ISBN 13 digits
     const isbnDigits = formData.isbn.replace(/\D/g, '');
     if (isbnDigits.length !== 13) {
       addError = 'ISBN must be exactly 13 digits';
-      return;
-    }
-
-    // Genre length
-    if (formData.genre.length > 100) {
-      addError = 'Genre cannot exceed 100 characters';
-      return;
-    }
-
-    // Description length
-    if (formData.description.length > 500) {
-      addError = 'Description cannot exceed 500 characters';
-      return;
-    }
-
-    // Price > 0
-    const price = parseFloat(formData.price);
-    if (price <= 0) {
-      addError = 'Price must be greater than 0';
-      return;
-    }
-
-    // Price integer part max 4 digits
-    const priceString = formData.price.toString();
-    const priceParts = priceString.split('.');
-    if (priceParts[0].length > 4) {
-      addError = 'Price cannot exceed 4 digits (max 9999.99)';
-      return;
-    }
-
-    // Inventory max 4 digits
-    const inventory = parseInt(formData.inventory);
-    const inventoryString = formData.inventory.toString();
-    if (inventoryString.length > 4) {
-      addError = 'Inventory cannot exceed 4 digits (max 9999)';
       return;
     }
 
@@ -114,62 +87,22 @@
         title: formData.title,
         author: formData.author,
         genre: formData.genre || undefined,
-        price,
-        inventory,
+        price: parseFloat(formData.price),
+        inventory: parseInt(formData.inventory),
         imageUrl: `https://covers.openlibrary.org/b/isbn/${isbnDigits}-L.jpg`,
         description: formData.description || undefined
       };
 
-      // @ts-ignore
       const newBook = await createBook(bookToAdd);
-
       books = [newBook, ...books];
       alert('Book added successfully!');
       closeAddBookModal();
     } catch (error) {
       console.error('Error adding book:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      addError = `Failed to add book: ${errorMessage}`;
+      addError = 'Failed to add book.';
     } finally {
       isSubmitting = false;
     }
-  }
-
-  // @ts-ignore
-  function handleModalBackdropClick(e) {
-    if (e.target === e.currentTarget) {
-      closeAddBookModal();
-    }
-  }
-
-  // @ts-ignore
-  function handleIsbnInput(e) {
-    const input = e.target.value;
-    formData.isbn = input.replace(/[^\d-]/g, '');
-  }
-
-  // @ts-ignore
-  function handlePriceInput(e) {
-    const input = e.target.value;
-    let cleaned = input.replace(/[^\d.]/g, '');
-    const parts = cleaned.split('.');
-
-    if (parts[0].length > 4) {
-      parts[0] = parts[0].slice(0, 4);
-    }
-    if (parts[1] && parts[1].length > 2) {
-      parts[1] = parts[1].slice(0, 2);
-    }
-
-    const newValue = parts.join('.');
-    formData.price = newValue;
-  }
-
-  // @ts-ignore
-  function handleInventoryInput(e) {
-    const input = e.target.value;
-    const cleaned = input.replace(/\D/g, '').slice(0, 4);
-    formData.inventory = cleaned;
   }
 </script>
 
@@ -189,10 +122,44 @@
     </div>
   </div>
 
+  <!-- Filters -->
+  <div class="filters">
+    <select bind:value={sortField}>
+      <option value="">Sort By</option>
+      <option value="title">Title</option>
+      <option value="price">Price</option>
+      <option value="inventory">Inventory</option>
+    </select>
+
+    <select bind:value={sortOrder}>
+      <option value="asc">Ascending</option>
+      <option value="desc">Descending</option>
+    </select>
+
+    <!-- Genre dropdown -->
+    <select bind:value={genre}>
+      <option value="">All Genres</option>
+      <option value="Fiction">Fiction</option>
+      <option value="Non-fiction">Non-fiction</option>
+      <option value="Romance">Romance</option>
+      <option value="Mystery">Mystery</option>
+      <option value="Thriller">Thriller</option>
+      <option value="Fantasy">Fantasy</option>
+      <option value="Science Fiction">Science Fiction</option>
+      <option value="Biography">Biography</option>
+      <option value="History">History</option>
+      <option value="Self-Help">Self-Help</option>
+    </select>
+
+    <input type="number" placeholder="Min Price" bind:value={minPrice} />
+    <input type="number" placeholder="Max Price" bind:value={maxPrice} />
+    <button class="btn btn-secondary" on:click={applyFilters}>Apply</button>
+  </div>
+
   {#if books.length === 0}
     <div class="empty-state">
-      <h2 class="empty-state-title">No books available</h2>
-      <p class="empty-state-text">Check back soon for new arrivals!</p>
+      <h2>No books available</h2>
+      <p>Check back soon for new arrivals!</p>
     </div>
   {:else}
     <div class="books-grid">
@@ -200,49 +167,22 @@
         <div class="book-card">
           <a href={`/book/${book.isbn}`} class="book-card-link">
             {#if book.imageUrl?.trim()}
-              <img
-                      src={book.imageUrl}
-                      alt={`${book.title} cover`}
-                      class="book-card-image"
-                      loading="lazy"
-              />
+              <img src={book.imageUrl} alt={`${book.title} cover`} class="book-card-image" loading="lazy" />
             {:else}
-              <div class="book-card-image-placeholder">
-                <span>📚</span>
-              </div>
+              <div class="book-card-image-placeholder"><span>📚</span></div>
             {/if}
             <h3 class="book-card-title">{book.title}</h3>
             <p class="book-card-author">by {book.author}</p>
           </a>
 
           <div class="book-card-footer">
-            <div class="book-card-pricing">
-              <p class="book-card-price">
-                {(+book.price).toLocaleString(undefined, {
-                  style: 'currency',
-                  currency: 'USD'
-                })}
-              </p>
-              {#if book.inventory > 0}
-                <p class="book-card-stock">
-                  {book.inventory} {book.inventory === 1 ? 'copy' : 'copies'} available
-                </p>
-              {:else}
-                <p class="book-card-stock" style="color: #ef4444;">
-                  Out of stock
-                </p>
-              {/if}
-            </div>
-
-            <button
-                    class="btn btn-primary btn-add-cart"
-                    disabled={book.inventory === 0}
-                    on:click|stopPropagation|preventDefault={() => {
-                // TODO: Add to cart functionality
-              }}
-            >
-              Add to Cart
-            </button>
+            <p class="book-card-price">
+              {(+book.price).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
+            </p>
+            <p class="book-card-stock">
+              {book.inventory > 0 ? `${book.inventory} copies available` : 'Out of stock'}
+            </p>
+            <button class="btn btn-primary" disabled={book.inventory === 0}>Add to Cart</button>
           </div>
         </div>
       {/each}
@@ -250,21 +190,13 @@
   {/if}
 </div>
 
+<!-- Add Book Modal -->
 {#if $role === 'OWNER' && showAddBookModal}
-  <!-- @ts-ignore -->
-  <div
-          class="modal-backdrop"
-          on:click={handleModalBackdropClick}
-          on:keydown={(e) => e.key === 'Escape' && closeAddBookModal()}
-          role="presentation"
-          aria-labelledby="modal-title"
-  >
+  <div class="modal-backdrop" on:click={(e) => e.target === e.currentTarget && closeAddBookModal()}>
     <div class="modal">
       <div class="modal-header">
-        <h2 id="modal-title">Add New Book</h2>
-        <button class="modal-close" on:click={closeAddBookModal} aria-label="Close dialog">
-          ✕
-        </button>
+        <h2>Add New Book</h2>
+        <button class="modal-close" on:click={closeAddBookModal}>✕</button>
       </div>
 
       <form on:submit={handleAddBook} class="modal-form">
@@ -273,115 +205,56 @@
         {/if}
 
         <div class="form-group">
-          <label for="title">
-            <span>Title <span class="required">*</span></span>
-          </label>
-          <input
-                  type="text"
-                  id="title"
-                  bind:value={formData.title}
-                  maxlength="150"
-                  placeholder="Enter book title"
-                  required
-          />
+          <label>Title *</label>
+          <input type="text" bind:value={formData.title} required />
         </div>
 
         <div class="form-group">
-          <label for="author">
-            <span>Author <span class="required">*</span></span>
-          </label>
-          <input
-                  type="text"
-                  id="author"
-                  bind:value={formData.author}
-                  maxlength="100"
-                  placeholder="Enter author name"
-                  required
-          />
+          <label>Author *</label>
+          <input type="text" bind:value={formData.author} required />
         </div>
 
         <div class="form-group">
-          <label for="isbn">
-            <span>ISBN <span class="required">*</span></span>
-          </label>
-          <input
-                  type="text"
-                  id="isbn"
-                  bind:value={formData.isbn}
-                  on:input={handleIsbnInput}
-                  placeholder="Enter ISBN (e.g., 978-0-545-58289-5)"
-                  required
-          />
+          <label>ISBN *</label>
+          <input type="text" bind:value={formData.isbn} required />
         </div>
 
         <div class="form-group">
-          <label for="genre">
-            <span>Genre</span>
-          </label>
-          <input
-                  type="text"
-                  id="genre"
-                  bind:value={formData.genre}
-                  maxlength="100"
-                  placeholder="Enter book genre (e.g., Science Fiction)"
-          />
+          <label>Genre</label>
+          <select bind:value={formData.genre}>
+            <option value="">Select Genre</option>
+            <option value="Fiction">Fiction</option>
+            <option value="Non-fiction">Non-fiction</option>
+            <option value="Romance">Romance</option>
+            <option value="Mystery">Mystery</option>
+            <option value="Thriller">Thriller</option>
+            <option value="Fantasy">Fantasy</option>
+            <option value="Science Fiction">Science Fiction</option>
+            <option value="Biography">Biography</option>
+            <option value="History">History</option>
+            <option value="Self-Help">Self-Help</option>
+          </select>
         </div>
 
         <div class="form-group">
-          <label for="description">
-            <span>Description</span>
-          </label>
-          <textarea
-                  id="description"
-                  bind:value={formData.description}
-                  maxlength="500"
-                  placeholder="Enter book description"
-                  rows="4"
-          ></textarea>
+          <label>Description</label>
+          <textarea bind:value={formData.description}></textarea>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="price">
-              <span>Price (USD) <span class="required">*</span></span>
-            </label>
-            <input
-                    type="number"
-                    id="price"
-                    bind:value={formData.price}
-                    on:input={handlePriceInput}
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0.01"
-                    required
-            />
+            <label>Price *</label>
+            <input type="number" bind:value={formData.price} step="0.01" required />
           </div>
 
           <div class="form-group">
-            <label for="inventory">
-              <span>Inventory <span class="required">*</span></span>
-            </label>
-            <input
-                    type="number"
-                    id="inventory"
-                    bind:value={formData.inventory}
-                    on:input={handleInventoryInput}
-                    placeholder="0"
-                    min="0"
-                    required
-            />
+            <label>Inventory *</label>
+            <input type="number" bind:value={formData.inventory} required />
           </div>
         </div>
 
         <div class="modal-footer">
-          <button
-                  type="button"
-                  class="btn btn-secondary"
-                  on:click={closeAddBookModal}
-                  disabled={isSubmitting}
-          >
-            Cancel
-          </button>
+          <button type="button" class="btn btn-secondary" on:click={closeAddBookModal}>Cancel</button>
           <button type="submit" class="btn btn-primary" disabled={isSubmitting}>
             {isSubmitting ? 'Adding...' : 'Add Book'}
           </button>
