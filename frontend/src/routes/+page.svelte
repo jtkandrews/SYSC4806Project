@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { createBook } from '../lib/api';
+  import { createBook } from '$lib/api';
   import { role } from '$lib/session';
+  import { goto } from '$app/navigation';
 
   export let data;
   let books = data.initialBooks || [];
@@ -188,6 +189,10 @@
       {/if}
     </div>
   </div>
+
+  <button on:click={() => goto('/recommendedBooks')}>
+    Go to Recommended Books
+  </button>
 
   {#if books.length === 0}
     <div class="empty-state">
