@@ -1,9 +1,33 @@
 <script lang="ts">
   import { createBook } from '../lib/api';
   import { role } from '$lib/session';
+  import { onMount } from 'svelte';
 
   export let data;
   let books = data.initialBooks || [];
+
+  // Sorting and filtering
+  let sortBy = '';
+  let order = 'asc';
+  let genreFilter = '';
+  let minPrice = '';
+  let maxPrice = '';
+
+  async function fetchBooks() {
+    let url = 'http://localhost:8080/api/books?';
+    if (sortBy) url += `sortBy=${sortBy}&order=${order}&`;
+    if (genreFilter) url += `genre=${genreFilter}&`;
+    if (minPrice && maxPrice) url += `minPrice=${minPrice}&maxPrice=${maxPrice}&`;
+
+    try {
+      const res = await fetch(url);
+      books = await res.json();
+    } catch (err) {
+      console.error('Error fetching books:', err);
+    }
+  }
+
+  onMount(fetchBooks);
 
   let showAddBookModal = false;
   let isSubmitting = false;
@@ -46,65 +70,24 @@
     e.preventDefault();
     addError = '';
 
-    // Required fields
     if (!formData.title || !formData.author || !formData.isbn || !formData.price || !formData.inventory) {
       addError = 'Please fill in all required fields';
       return;
     }
 
-    // Title length
-    if (formData.title.length > 150) {
-      addError = 'Title cannot exceed 150 characters';
-      return;
-    }
-
-    // Author length
-    if (formData.author.length > 100) {
-      addError = 'Author cannot exceed 100 characters';
-      return;
-    }
-
-    // ISBN 13 digits
     const isbnDigits = formData.isbn.replace(/\D/g, '');
     if (isbnDigits.length !== 13) {
       addError = 'ISBN must be exactly 13 digits';
       return;
     }
 
-    // Genre length
-    if (formData.genre.length > 100) {
-      addError = 'Genre cannot exceed 100 characters';
-      return;
-    }
-
-    // Description length
-    if (formData.description.length > 500) {
-      addError = 'Description cannot exceed 500 characters';
-      return;
-    }
-
-    // Price > 0
     const price = parseFloat(formData.price);
     if (price <= 0) {
       addError = 'Price must be greater than 0';
       return;
     }
 
-    // Price integer part max 4 digits
-    const priceString = formData.price.toString();
-    const priceParts = priceString.split('.');
-    if (priceParts[0].length > 4) {
-      addError = 'Price cannot exceed 4 digits (max 9999.99)';
-      return;
-    }
-
-    // Inventory max 4 digits
     const inventory = parseInt(formData.inventory);
-    const inventoryString = formData.inventory.toString();
-    if (inventoryString.length > 4) {
-      addError = 'Inventory cannot exceed 4 digits (max 9999)';
-      return;
-    }
 
     isSubmitting = true;
 
@@ -153,14 +136,12 @@
     const input = e.target.value;
     let cleaned = input.replace(/[^\d.]/g, '');
     const parts = cleaned.split('.');
-
     if (parts[0].length > 4) {
       parts[0] = parts[0].slice(0, 4);
     }
     if (parts[1] && parts[1].length > 2) {
       parts[1] = parts[1].slice(0, 2);
     }
-
     const newValue = parts.join('.');
     formData.price = newValue;
   }
@@ -187,6 +168,42 @@
         </button>
       {/if}
     </div>
+
+    <!-- Sorting and Filtering UI -->
+    <div class="filters" style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <select bind:value={sortBy} on:change={fetchBooks}>
+        <option value="">Sort By</option>
+        <option value="title">Title</option>
+        <option value="price">Price</option>
+        <option value="inventory">Inventory</option>
+      </select>
+
+      <select bind:value={order} on:change={fetchBooks}>
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+      </select>
+
+      <input
+        type="text"
+        placeholder="Genre"
+        bind:value={genreFilter}
+        on:input={fetchBooks}
+      />
+
+      <input
+        type="number"
+        placeholder="Min Price"
+        bind:value={minPrice}
+        on:input={fetchBooks}
+      />
+
+      <input
+        type="number"
+        placeholder="Max Price"
+        bind:value={maxPrice}
+        on:input={fetchBooks}
+      />
+    </div>
   </div>
 
   {#if books.length === 0}
@@ -201,10 +218,10 @@
           <a href={`/book/${book.isbn}`} class="book-card-link">
             {#if book.imageUrl?.trim()}
               <img
-                      src={book.imageUrl}
-                      alt={`${book.title} cover`}
-                      class="book-card-image"
-                      loading="lazy"
+                src={book.imageUrl}
+                alt={`${book.title} cover`}
+                class="book-card-image"
+                loading="lazy"
               />
             {:else}
               <div class="book-card-image-placeholder">
@@ -235,9 +252,9 @@
             </div>
 
             <button
-                    class="btn btn-primary btn-add-cart"
-                    disabled={book.inventory === 0}
-                    on:click|stopPropagation|preventDefault={() => {
+              class="btn btn-primary btn-add-cart"
+              disabled={book.inventory === 0}
+              on:click|stopPropagation|preventDefault={() => {
                 // TODO: Add to cart functionality
               }}
             >
@@ -251,13 +268,12 @@
 </div>
 
 {#if $role === 'OWNER' && showAddBookModal}
-  <!-- @ts-ignore -->
   <div
-          class="modal-backdrop"
-          on:click={handleModalBackdropClick}
-          on:keydown={(e) => e.key === 'Escape' && closeAddBookModal()}
-          role="presentation"
-          aria-labelledby="modal-title"
+    class="modal-backdrop"
+    on:click={handleModalBackdropClick}
+    on:keydown={(e) => e.key === 'Escape' && closeAddBookModal()}
+    role="presentation"
+    aria-labelledby="modal-title"
   >
     <div class="modal">
       <div class="modal-header">
@@ -273,113 +289,65 @@
         {/if}
 
         <div class="form-group">
-          <label for="title">
-            <span>Title <span class="required">*</span></span>
-          </label>
+          <label for="title"><span>Title *</span></label>
+          <input type="text" id="title" bind:value={formData.title} required />
+        </div>
+
+        <div class="form-group">
+          <label for="author"><span>Author *</span></label>
+          <input type="text" id="author" bind:value={formData.author} required />
+        </div>
+
+        <div class="form-group">
+          <label for="isbn"><span>ISBN *</span></label>
           <input
-                  type="text"
-                  id="title"
-                  bind:value={formData.title}
-                  maxlength="150"
-                  placeholder="Enter book title"
-                  required
+            type="text"
+            id="isbn"
+            bind:value={formData.isbn}
+            on:input={handleIsbnInput}
+            required
           />
         </div>
 
         <div class="form-group">
-          <label for="author">
-            <span>Author <span class="required">*</span></span>
-          </label>
-          <input
-                  type="text"
-                  id="author"
-                  bind:value={formData.author}
-                  maxlength="100"
-                  placeholder="Enter author name"
-                  required
-          />
+          <label for="genre"><span>Genre</span></label>
+          <input type="text" id="genre" bind:value={formData.genre} />
         </div>
 
         <div class="form-group">
-          <label for="isbn">
-            <span>ISBN <span class="required">*</span></span>
-          </label>
-          <input
-                  type="text"
-                  id="isbn"
-                  bind:value={formData.isbn}
-                  on:input={handleIsbnInput}
-                  placeholder="Enter ISBN (e.g., 978-0-545-58289-5)"
-                  required
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="genre">
-            <span>Genre</span>
-          </label>
-          <input
-                  type="text"
-                  id="genre"
-                  bind:value={formData.genre}
-                  maxlength="100"
-                  placeholder="Enter book genre (e.g., Science Fiction)"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="description">
-            <span>Description</span>
-          </label>
-          <textarea
-                  id="description"
-                  bind:value={formData.description}
-                  maxlength="500"
-                  placeholder="Enter book description"
-                  rows="4"
-          ></textarea>
+          <label for="description"><span>Description</span></label>
+          <textarea id="description" bind:value={formData.description}></textarea>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="price">
-              <span>Price (USD) <span class="required">*</span></span>
-            </label>
+            <label for="price"><span>Price *</span></label>
             <input
-                    type="number"
-                    id="price"
-                    bind:value={formData.price}
-                    on:input={handlePriceInput}
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0.01"
-                    required
+              type="number"
+              id="price"
+              bind:value={formData.price}
+              on:input={handlePriceInput}
+              min="0.01"
+              step="0.01"
+              required
             />
           </div>
 
           <div class="form-group">
-            <label for="inventory">
-              <span>Inventory <span class="required">*</span></span>
-            </label>
+            <label for="inventory"><span>Inventory *</span></label>
             <input
-                    type="number"
-                    id="inventory"
-                    bind:value={formData.inventory}
-                    on:input={handleInventoryInput}
-                    placeholder="0"
-                    min="0"
-                    required
+              type="number"
+              id="inventory"
+              bind:value={formData.inventory}
+              on:input={handleInventoryInput}
+              min="0"
+              required
             />
           </div>
         </div>
 
         <div class="modal-footer">
-          <button
-                  type="button"
-                  class="btn btn-secondary"
-                  on:click={closeAddBookModal}
-                  disabled={isSubmitting}
-          >
+          <button type="button" class="btn btn-secondary" on:click={closeAddBookModal}>
             Cancel
           </button>
           <button type="submit" class="btn btn-primary" disabled={isSubmitting}>
