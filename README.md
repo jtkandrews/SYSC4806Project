@@ -10,18 +10,6 @@ SYSC4806 Group Project - JS Svelte
 
 # Running the Application Locally
 In the terminal, run the following: \
-`cd frontend`
-
-`npm run build` 
-
-`cd ..` 
-
-`rm -rf SvelteAmazin/src/main/resources/static` 
-
-`mkdir -p SvelteAmazin/src/main/resources/static` 
-
-`cp -r frontend/build/* SvelteAmazin/src/main/resources/static/`
-
 `cd SvelteAmazin` 
 
 `./mvnw package` 
