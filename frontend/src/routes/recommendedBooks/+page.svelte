@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
+    import {goto} from "$app/navigation";
 
     const DISPLAY_COUNT = 8;
 
@@ -20,6 +21,13 @@
         timer = setInterval(myTimer, 5000);
 
         window.addEventListener("keydown", handleKey);
+        return () => {
+            if (timer) {
+                clearInterval(timer);
+                timer = 0;
+            }
+            window.removeEventListener("keydown", handleKey);
+        };
     });
 
     function myTimer() {
@@ -49,14 +57,6 @@
 
     //On variable change it will change variable value to be within bounds of 0 and display_count
     $: normalizedIndex = ((bookIndex % DISPLAY_COUNT) + DISPLAY_COUNT) % DISPLAY_COUNT;
-
-    onDestroy(() => {
-        if (timer) {
-            clearInterval(timer);
-            timer = 0;
-        }
-        window.removeEventListener("keydown", handleKey);
-    });
 </script>
 
 <style>
@@ -265,10 +265,13 @@
 <div class="container" >
     <h2>Based on other users</h2>
 
+    <!-- For each loop that will show only selected index and hide the rest -->
     {#each books.slice(0, 8) as book, i}
+        <!-- Container for book cards that will be displayed (block) or hidden (none)-->
         <div class="book-card" style="display: {i === normalizedIndex ? 'block' : 'none'};">
             <div class="book-card-number">{i + 1}/8</div>
 
+            <!-- If image url exists show image -->
             {#if book.imageUrl?.trim()}
                 <img
                         src={book.imageUrl}
@@ -276,12 +279,13 @@
                         class="book-card-image"
                         loading="lazy"
                 />
-            {:else}
+            {:else} <!-- Else show placeholder image -->
                 <div class="book-card-image-placeholder">
                     <span>📚</span>
                 </div>
             {/if}
 
+            <!-- Shows book in detail -->
             <div class="book-card-description">
                 <h5>{book.title}</h5>
                 <p><strong>Author(s):</strong> {book.author}</p>
@@ -291,21 +295,22 @@
                 <p class="price">${book.price}</p>
 
                 <div class="button-container">
-                    <form action="/api/cart" method="post">
-                        <input type="hidden" name="bookIsbn" value={book.isbn} />
-                        <button class="add-to-cart-button cursor" type="submit">Add to Cart</button>
-                    </form>
+<!--                    <form action="/api/cart" method="post">-->
+<!--                        <input type="hidden" name="bookIsbn" value={book.isbn} />-->
+                        <button class="add-to-cart-button cursor" type="submit" on:click={() => goto('/cart')}>Add to Cart</button>
+<!--                    </form>-->
                 </div>
             </div>
         </div>
     {/each}
 
+    <!-- Next and previous buttons to cycle images -->
     <button
             type="button"
             class="prev"
             on:click={prevBook}
     >
-        &#10094;
+        &#10094; <!-- Unicode for left arrow -->
     </button>
 
     <button
@@ -313,13 +318,15 @@
             class="next"
             on:click={nextBook}
     >
-        &#10095;
+        &#10095; <!-- Unicode for right arrow -->
     </button>
 
+    <!-- Image text -->
     <div class="caption-container">
         <p id="caption">{books[normalizedIndex]?.title}</p>
     </div>
 
+    <!-- Thumbnail images -->
     <div class="row">
         {#each books.slice(0,8) as book, i}
             <div class="column">
