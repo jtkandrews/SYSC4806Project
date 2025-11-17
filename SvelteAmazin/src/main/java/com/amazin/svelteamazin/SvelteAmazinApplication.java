@@ -25,7 +25,7 @@ public class SvelteAmazinApplication {
         return (args) -> {
             String fileName = "books.csv";
 
-            // ✅ Recommended best practice: load as InputStream so it works in JAR and IDE
+            //  Recommended best practice: load as InputStream so it works in JAR and IDE
             try (InputStream input = Book.class.getClassLoader().getResourceAsStream(fileName)) {
                 if (input == null) {
                     throw new IllegalArgumentException("File not found: " + fileName);

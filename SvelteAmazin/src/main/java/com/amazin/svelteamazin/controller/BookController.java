@@ -22,32 +22,58 @@ public class BookController {
 
     /**
      * GET /api/books
-     * Return all books, optionally sorted by a field and order.
-     * Example: /api/books?sortBy=price&order=desc
+     * Optional query params:
+     *   sortBy  = price | title | author | inventory
+     *   order   = asc | desc
+     *   genre   = exact genre match (case insensitive)
+     *   minPrice, maxPrice = numeric filter on price
      */
     @GetMapping
     public List<Book> getAllBooks(
             @RequestParam(value = "sortBy", required = false) String sortBy,
-            @RequestParam(value = "order", required = false, defaultValue = "asc") String order
+            @RequestParam(value = "order", required = false, defaultValue = "asc") String order,
+            @RequestParam(value = "genre", required = false) String genre,
+            @RequestParam(value = "minPrice", required = false) Double minPrice,
+            @RequestParam(value = "maxPrice", required = false) Double maxPrice
     ) {
-        if (sortBy != null && !sortBy.isBlank()) {
-            Sort.Direction direction = "desc".equalsIgnoreCase(order) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // sorting
+        Sort sort = Sort.unsorted();
 
-            // Ensure only allowed fields are sortable
-            return switch (sortBy.toLowerCase()) {
-                case "title" -> repo.findAll(Sort.by(direction, "title"));
-                case "price" -> repo.findAll(Sort.by(direction, "price"));
-                case "inventory" -> repo.findAll(Sort.by(direction, "inventory"));
-                default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort field: " + sortBy);
+        if (sortBy != null && !sortBy.isBlank()) {
+            Sort.Direction direction =
+                    "desc".equalsIgnoreCase(order) ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+            String property = switch (sortBy.toLowerCase()) {
+                case "title" -> "title";
+                case "price" -> "price";
+                case "inventory" -> "inventory";
+                case "author" -> "author";
+                default -> null; // unknown sort field ignored
             };
+
+            if (property != null) {
+                sort = Sort.by(direction, property);
+            }
         }
 
-        return repo.findAll();
+        List<Book> books = sort.isUnsorted()
+                ? repo.findAll()
+                : repo.findAll(sort);
+
+        // filtering in memory
+        return books.stream()
+                .filter(b ->
+                        genre == null || genre.isBlank()
+                                || (b.getGenre() != null && b.getGenre().equalsIgnoreCase(genre)))
+                .filter(b ->
+                        minPrice == null || b.getPrice() >= minPrice)
+                .filter(b ->
+                        maxPrice == null || b.getPrice() <= maxPrice)
+                .toList();
     }
 
     /**
      * GET /api/books/{isbn}
-     * Return a single book by ISBN.
      */
     @GetMapping("/{isbn}")
     public Book getBookByIsbn(@PathVariable String isbn) {
@@ -57,7 +83,6 @@ public class BookController {
 
     /**
      * GET /api/books/search?query=...
-     * Case-insensitive search on title OR author.
      */
     @GetMapping("/search")
     public List<Book> searchBooks(@RequestParam String query) {
@@ -66,7 +91,6 @@ public class BookController {
 
     /**
      * POST /api/books
-     * Create a new book (or overwrite if ISBN exists).
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -79,18 +103,15 @@ public class BookController {
 
     /**
      * PUT /api/books/{isbn}
-     * Update an existing book (creates if not present).
      */
     @PutMapping("/{isbn}")
     public Book upsert(@PathVariable String isbn, @RequestBody Book book) {
-        // Ensure path ISBN wins
         book.setIsbn(isbn);
         return repo.save(book);
     }
 
     /**
      * DELETE /api/books/{isbn}
-     * Delete a book by ISBN.
      */
     @DeleteMapping("/{isbn}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
