@@ -36,3 +36,38 @@ export async function createBook(book: Partial<Book>, fetchFn: typeof fetch = fe
     return res.json();
 }
 
+export type CheckoutItem = {
+    isbn: string;
+    quantity: number;
+};
+
+export async function checkoutCart(
+    items: CheckoutItem[],
+    fetchFn: typeof fetch = fetch
+): Promise<Book[]> {
+    const res = await fetchFn(`${API_BASE}/api/cart/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ items })
+    });
+
+    if (!res.ok) {
+        let message = `Checkout failed (${res.status})`;
+        try {
+            const data = await res.json();
+            if (typeof data?.message === 'string') {
+                message = data.message;
+            }
+        } catch {
+            const text = await res.text();
+            if (text) {
+                message = text;
+            }
+        }
+        throw new Error(message);
+    }
+
+    return res.json();
+}
+
