@@ -89,6 +89,7 @@ Each record represents one book listed in the bookstore.
 ## Plan for Sprint 3
 - [ ] Add User accounts
 - [ ] Improve UI
+- [ ] Finish book recomendations
 
  ## Current State of the Project
 After Milestone 2 our project now has:
