@@ -85,11 +85,14 @@ Each record represents one book listed in the bookstore.
 - [x] Began development for book recommendations
 - [x] Added a protected user and owner mode
 - [x] Added the ability for the protected owner mode to add and edit book details
+- [x] Updated Tests
 
 ## Plan for Sprint 3
 - [ ] Add User accounts
+- [ ] Finish Sorting and Filtering
 - [ ] Improve UI
 - [ ] Finish book recomendations
+- [ ] Update Tests
 
  ## Current State of the Project
 After Milestone 2 our project now has:
