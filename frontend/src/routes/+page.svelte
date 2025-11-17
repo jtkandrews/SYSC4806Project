@@ -4,7 +4,6 @@
   import { role } from '$lib/session';
   import { goto } from '$app/navigation';
   import { onDestroy } from 'svelte';
-  import { role } from '$lib/session';
   import { addToCart, cartItemCount } from '$lib/stores/cart';
   import { addBookToStore, booksStore, setBooks } from '$lib/stores/books';
   import type { Book } from '$lib/types';
