@@ -103,7 +103,10 @@ In terms of implementation, the backend is configured as a Spring Boot app which
 
 In regard to deployment, the frontend build is currently being copied into Spring Boot's static resources, from which a single JAR is created. We recognize this situation may not be ideal, and as such we have future plans to potentially address this process. 
 <div align="center">
-Add pictures of site here
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/0fdfdec2-f831-47f1-a543-a765aee05dc4" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/f59fe326-32e6-4d6f-9bc9-51a3085f3ee9" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/988e8080-e854-4994-8cfb-0e5e19bb4c3f" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/d500565f-350c-4b20-9b13-71c2cdd91125" />
 </div>
 
 ## Database Schema
