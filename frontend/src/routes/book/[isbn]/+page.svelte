@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { role } from '$lib/session'; // 🔹 NEW: role store
+  import { role } from '$lib/session'; //
 
   export let data;
 
@@ -84,12 +84,12 @@
     }
 
     try {
-      const response = await fetch(`/api/owner/books/${data.book.isbn}`, { // 🔹 changed path to owner
+      const response = await fetch(`/api/owner/books/${data.book.isbn}`, { //
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: 'include', // 🔹 include cookie for owner auth
+        credentials: 'include', //
         body: JSON.stringify({
           isbn: data.book.isbn,
           title: data.book.title,
@@ -196,7 +196,7 @@
       <span>Back to Books</span>
     </a>
 
-    {#if $role === 'OWNER'}  <!-- 🔹 only owners see Edit button -->
+    {#if $role === 'OWNER'}
       <button class="btn btn-secondary" on:click={openEditModal}>
         ✎ Edit
       </button>
@@ -268,7 +268,7 @@
   </div>
 </div>
 
-{#if $role === 'OWNER' && isEditModalOpen}  <!-- 🔹 owner-only edit modal -->
+{#if $role === 'OWNER' && isEditModalOpen}
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions a11y-click-events-have-key-events -->
   <div
     class="modal-overlay"

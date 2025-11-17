@@ -1,225 +1,220 @@
 <script lang="ts">
-  import { createBook } from '../lib/api';
+  import { onMount } from 'svelte';
   import { role } from '$lib/session';
 
-  export let data;
-  let books = data.initialBooks || [];
+  // Book type
+  type Book = {
+    isbn: string;
+    title: string;
+    author: string;
+    genre?: string;
+    description?: string;
+    price: number;
+    inventory: number;
+    imageUrl?: string;
+  };
 
-  // Sorting and filtering
-  let sortBy = 'title';
+  // UI State
+  let books: Book[] = [];
+  let sortBy = 'price';
   let order = 'asc';
-  let genre = '';
+  let genre = 'All';
   let minPrice = '';
   let maxPrice = '';
 
-  let showAddBookModal = false;
-  let isSubmitting = false;
-  let addError = '';
+  const GENRES = [
+    'All',
+    'Fantasy',
+    'Action',
+    'Romance',
+    'Mystery',
+    'Thriller',
+    'Philosophy',
+    'Self-help',
+    'Historical fiction'
+  ];
 
-  let formData = {
-    title: '',
-    author: '',
-    isbn: '',
-    description: '',
-    genre: '',
-    price: '',
-    inventory: ''
-  };
+  async function loadBooks() {
+    const params = new URLSearchParams();
 
-  // Fetch filtered/sorted books
-  async function fetchBooks() {
+    if (sortBy) params.set('sortBy', sortBy);
+    if (order) params.set('order', order);
+    if (genre !== 'All') params.set('genre', genre);
+    if (minPrice) params.set('minPrice', minPrice);
+    if (maxPrice) params.set('maxPrice', maxPrice);
+
+    const url = `http://localhost:8080/api/books?${params.toString()}`;
+
     try {
-      let url = `/api/books?sortBy=${sortBy}&order=${order}`;
-      if (genre) url += `&genre=${genre}`;
-      if (minPrice) url += `&minPrice=${minPrice}`;
-      if (maxPrice) url += `&maxPrice=${maxPrice}`;
-
       const res = await fetch(url);
       books = await res.json();
     } catch (err) {
-      console.error('Error fetching books:', err);
+      console.error('Error loading books', err);
+      books = [];
     }
   }
 
-  // Handle sorting and filtering
-  $: fetchBooks();
-
-  function openAddBookModal() {
-    showAddBookModal = true;
+  function resetFilters() {
+    sortBy = 'price';
+    order = 'asc';
+    genre = 'All';
+    minPrice = '';
+    maxPrice = '';
+    loadBooks();
   }
 
-  function closeAddBookModal() {
-    showAddBookModal = false;
-    resetForm();
-    addError = '';
+  function cover(book: Book) {
+    if (book.imageUrl && book.imageUrl.trim() !== '') return book.imageUrl;
+    return `https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg`;
   }
 
-  function resetForm() {
-    formData = {
-      title: '',
-      author: '',
-      isbn: '',
-      description: '',
-      genre: '',
-      price: '',
-      inventory: ''
-    };
-  }
-
-  async function handleAddBook(e) {
-    e.preventDefault();
-    addError = '';
-
-    if (!formData.title || !formData.author || !formData.isbn || !formData.price || !formData.inventory) {
-      addError = 'Please fill in all required fields';
-      return;
-    }
-
-    const isbnDigits = formData.isbn.replace(/\D/g, '');
-    if (isbnDigits.length !== 13) {
-      addError = 'ISBN must be exactly 13 digits';
-      return;
-    }
-
-    const price = parseFloat(formData.price);
-    if (price <= 0) {
-      addError = 'Price must be greater than 0';
-      return;
-    }
-
-    const inventory = parseInt(formData.inventory);
-    if (inventory < 0) {
-      addError = 'Inventory must be 0 or greater';
-      return;
-    }
-
-    isSubmitting = true;
-
-    try {
-      const bookToAdd = {
-        isbn: isbnDigits,
-        title: formData.title,
-        author: formData.author,
-        genre: formData.genre || undefined,
-        price,
-        inventory,
-        imageUrl: `https://covers.openlibrary.org/b/isbn/${isbnDigits}-L.jpg`,
-        description: formData.description || undefined
-      };
-
-      const newBook = await createBook(bookToAdd);
-      books = [newBook, ...books];
-      alert('Book added successfully!');
-      closeAddBookModal();
-    } catch (error) {
-      console.error('Error adding book:', error);
-      addError = `Failed to add book: ${error instanceof Error ? error.message : 'Unknown error'}`;
-    } finally {
-      isSubmitting = false;
-    }
-  }
-
-  function handleModalBackdropClick(e) {
-    if (e.target === e.currentTarget) closeAddBookModal();
-  }
+  onMount(loadBooks);
 </script>
 
-<div class="container">
-  <div class="page-header">
-    <div class="page-header-content">
-      <div>
-        <h1 class="page-title">Browse Our Collection</h1>
-        <p class="page-subtitle">Discover great books at amazin prices</p>
+
+<section class="page">
+  <!-- HEADER -->
+  <header class="hero">
+    <div>
+      <h1 class="hero-title">Browse Our Collection</h1>
+      <p class="hero-subtitle">Great books at amazin prices</p>
+    </div>
+
+    {#if $role === 'OWNER'}
+      <a class="add-btn" href="/owner">+ Add Book</a>
+    {/if}
+  </header>
+
+  <!-- FILTER BAR -->
+  <div class="filters">
+    <div class="row">
+
+      <div class="filter">
+        <label>Sort By</label>
+        <select bind:value={sortBy}>
+          <option value="price">Price</option>
+          <option value="title">Title</option>
+          <option value="inventory">Inventory</option>
+        </select>
       </div>
 
-      {#if $role === 'OWNER'}
-        <button class="btn btn-primary" on:click={openAddBookModal}>
-          ➕ Add Book
-        </button>
-      {/if}
+      <div class="filter">
+        <label>Order</label>
+        <select bind:value={order}>
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+      </div>
+
+      <div class="filter">
+        <label>Genre</label>
+        <select bind:value={genre}>
+          {#each GENRES as g}
+            <option value={g}>{g}</option>
+          {/each}
+        </select>
+      </div>
+
+      <div class="filter">
+        <label>Min Price</label>
+        <input type="number" bind:value={minPrice}/>
+      </div>
+
+      <div class="filter">
+        <label>Max Price</label>
+        <input type="number" bind:value={maxPrice}/>
+      </div>
+
+      <div class="buttons">
+        <button class="apply" on:click={loadBooks}>Apply</button>
+        <button class="reset" on:click={resetFilters}>Reset</button>
+      </div>
     </div>
   </div>
 
-  <!-- Sorting and Filtering Controls -->
-  <div class="filters">
-    <select bind:value={sortBy}>
-      <option value="title">Sort By: Title</option>
-      <option value="price">Sort By: Price</option>
-      <option value="inventory">Sort By: Inventory</option>
-    </select>
-
-    <select bind:value={order}>
-      <option value="asc">Ascending</option>
-      <option value="desc">Descending</option>
-    </select>
-
-    <!-- Genre dropdown -->
-    <select bind:value={genre}>
-      <option value="">All Genres</option>
-      <option value="Fiction">Fiction</option>
-      <option value="Non-Fiction">Non-Fiction</option>
-      <option value="Science Fiction">Science Fiction</option>
-      <option value="Fantasy">Fantasy</option>
-      <option value="Romance">Romance</option>
-      <option value="Mystery">Mystery</option>
-      <option value="Horror">Horror</option>
-      <option value="Biography">Biography</option>
-    </select>
-
-    <input type="number" placeholder="Min Price" bind:value={minPrice} min="0" />
-    <input type="number" placeholder="Max Price" bind:value={maxPrice} min="0" />
-  </div>
-
-  <!-- Book Display -->
+  <!-- BOOKS GRID -->
   {#if books.length === 0}
-    <div class="empty-state">
-      <h2>No books available</h2>
-      <p>Check back soon for new arrivals!</p>
-    </div>
+    <p>No books found with these filters.</p>
   {:else}
-    <div class="books-grid">
+    <div class="grid">
       {#each books as book}
-        <div class="book-card">
-          <a href={`/book/${book.isbn}`} class="book-card-link">
-            {#if book.imageUrl?.trim()}
-              <img src={book.imageUrl} alt={`${book.title} cover`} class="book-card-image" loading="lazy" />
-            {:else}
-              <div class="book-card-image-placeholder"><span>📚</span></div>
-            {/if}
-            <h3 class="book-card-title">{book.title}</h3>
-            <p class="book-card-author">by {book.author}</p>
-          </a>
-
-          <div class="book-card-footer">
-            <div class="book-card-pricing">
-              <p class="book-card-price">
-                {(+book.price).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
-              </p>
-              {#if book.inventory > 0}
-                <p class="book-card-stock">{book.inventory} {book.inventory === 1 ? 'copy' : 'copies'} available</p>
-              {:else}
-                <p class="book-card-stock" style="color: #ef4444;">Out of stock</p>
-              {/if}
-            </div>
-            <button class="btn btn-primary btn-add-cart" disabled={book.inventory === 0}>
-              Add to Cart
-            </button>
+        <article class="card">
+          <div class="image">
+            <img src={cover(book)} alt={book.title} loading="lazy">
           </div>
-        </div>
+
+          <h2 class="title">
+            <a href={`/book/${book.isbn}`}>{book.title}</a>
+          </h2>
+
+          <p class="author">{book.author}</p>
+          {#if book.genre}<p class="genre">{book.genre}</p>{/if}
+
+          <div class="footer">
+            <span class="price">${book.price}</span>
+
+            {#if book.inventory > 0}
+              <span class="stock in">In Stock</span>
+            {:else}
+              <span class="stock out">Out of Stock</span>
+            {/if}
+          </div>
+        </article>
       {/each}
     </div>
   {/if}
-</div>
+</section>
+
 
 <style>
-  .filters {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
+  .page { max-width: 1100px; margin: auto; padding: 2rem; }
+
+  .hero { display: flex; justify-content: space-between; align-items: center; }
+  .hero-title { font-size: 2rem; font-weight: 700; }
+  .hero-subtitle { color: #666; }
+
+  .add-btn {
+    background: #2563eb;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 30px;
+    text-decoration: none;
   }
+
+  .filters {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f1f5f9;
+    border-radius: 10px;
+  }
+
+  .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+  .filter { display: flex; flex-direction: column; min-width: 120px; }
+  label { font-size: 0.8rem; color: #555; margin-bottom: 2px; }
+
   select, input {
-    padding: 6px;
-    border-radius: 4px;
+    padding: 0.4rem;
+    border-radius: 6px;
     border: 1px solid #ccc;
   }
+
+  .buttons { display: flex; gap: 0.5rem; align-items: flex-end; margin-left: auto; }
+  .apply { background: #2563eb; color: white; padding: 0.5rem 1rem; border-radius: 6px; border: none; }
+  .reset { background: #e2e8f0; padding: 0.5rem 1rem; border-radius: 6px; border: none; }
+
+  .grid { margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 1.5rem; }
+
+  .card { background: white; border: 1px solid #ddd; padding: 1rem; border-radius: 10px; }
+
+  .image img { width: 100%; height: 260px; object-fit: cover; border-radius: 6px; }
+
+  .title { margin: 0.5rem 0; font-size: 1rem; font-weight: 600; }
+  .author { color: #555; margin: 0; }
+  .genre { color: #888; margin: 0.3rem 0; }
+
+  .footer { display: flex; justify-content: space-between; margin-top: 0.5rem; }
+  .price { font-weight: bold; }
+  .stock.in { color: #16a34a; }
+  .stock.out { color: #dc2626; }
 </style>
