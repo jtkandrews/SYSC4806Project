@@ -1,10 +1,13 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import { createBook } from '../lib/api';
+
+  import { createBook } from '$lib/api';
   import { role } from '$lib/session';
+  import { goto } from '$app/navigation';
+  import { onDestroy } from 'svelte';
   import { addToCart, cartItemCount } from '$lib/stores/cart';
   import { addBookToStore, booksStore, setBooks } from '$lib/stores/books';
   import type { Book } from '$lib/types';
+
 
   export let data;
   setBooks(data.initialBooks || [])
@@ -230,14 +233,10 @@
     </div>
   </div>
 
-  <!-- {#if books.length === 0} -->
-  {#if cartMessage}
-    <div class="cart-feedback success">{cartMessage}</div>
-  {/if}
 
-  {#if cartError}
-    <div class="cart-feedback error">{cartError}</div>
-  {/if}
+  <button on:click={() => goto('/recommendedBooks')}>
+    Go to Recommended Books
+  </button>
 
   {#if $booksStore.length === 0}
     <div class="empty-state">
