@@ -8,12 +8,41 @@
 
   export let data;
 
+  // Predefined genre options
+  const genreOptions = [
+    'Fiction',
+    'Non-Fiction',
+    'Science Fiction',
+    'Fantasy',
+    'Mystery',
+    'Thriller',
+    'Romance',
+    'Horror',
+    'Biography',
+    'History',
+    'Self-Help',
+    'Poetry',
+    'Drama',
+    'Adventure',
+    'Children\'s',
+    'Young Adult',
+    'Graphic Novel',
+    'Cookbook',
+    'Travel',
+    'Science',
+    'Philosophy',
+    'Religion',
+    'Historical Fiction',
+    'Business',
+    'Other'
+  ];
+
   let isEditModalOpen = false;
   let editFormData = {
-    genre: data.book.genre || '',
-    description: data.book.description || '',
-    price: data.book.price,
-    inventory: data.book.inventory
+    genres: [] as string[],
+    description: '',
+    price: 0,
+    inventory: 0
   };
   let isSubmitting = false;
   let editError = '';
@@ -82,11 +111,19 @@
     if (!isEditModalOpen) {
       // Only reset form data when modal is closed to avoid interfering with editing
       editFormData = {
-        genre: data.book.genre || '',
+        genres: data.book.genre ? data.book.genre.split(', ').map((g: string) => g.trim()) : [],
         description: data.book.description || '',
         price: data.book.price,
         inventory: data.book.inventory
       };
+    }
+  }
+
+  function handleEditGenreToggle(genre: string) {
+    if (editFormData.genres.includes(genre)) {
+      editFormData.genres = editFormData.genres.filter(g => g !== genre);
+    } else {
+      editFormData.genres = [...editFormData.genres, genre];
     }
   }
 
@@ -104,13 +141,6 @@
   async function handleSaveEdit() {
     isSubmitting = true;
     editError = '';
-
-    // Validate genre length
-    if (editFormData.genre.length > 100) {
-      editError = 'Genre cannot exceed 100 characters';
-      isSubmitting = false;
-      return;
-    }
 
     // Validate description length
     if (editFormData.description.length > 500) {
@@ -155,7 +185,7 @@
           title: data.book.title,
           author: data.book.author,
           publisher: data.book.publisher,
-          genre: editFormData.genre,
+          genre: editFormData.genres.length > 0 ? editFormData.genres.join(', ') : null,
           description: editFormData.description,
           imageUrl: imageUrl,
           price: editFormData.price,
@@ -185,7 +215,7 @@
 
   function openEditModal() {
     editFormData = {
-      genre: data.book.genre || '',
+      genres: data.book.genre ? data.book.genre.split(', ').map((g: string) => g.trim()) : [],
       description: data.book.description || '',
       price: data.book.price,
       inventory: data.book.inventory
@@ -392,16 +422,22 @@
 
         <form on:submit|preventDefault={handleSaveEdit}>
           <div class="form-group">
-            <label for="genre">
-              <span>Genre</span>
+            <label>
+              <span>Genres (Select all that apply)</span>
             </label>
-            <input
-              type="text"
-              id="genre"
-              bind:value={editFormData.genre}
-              maxlength="100"
-              placeholder="e.g., Fiction, Non-Fiction, Science Fiction"
-            />
+            <div class="checkbox-grid">
+              {#each genreOptions as genre}
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    value={genre}
+                    checked={editFormData.genres.includes(genre)}
+                    on:change={() => handleEditGenreToggle(genre)}
+                  />
+                  <span>{genre}</span>
+                </label>
+              {/each}
+            </div>
           </div>
 
           <div class="form-group">
