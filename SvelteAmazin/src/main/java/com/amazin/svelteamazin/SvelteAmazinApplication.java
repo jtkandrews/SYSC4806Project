@@ -19,6 +19,7 @@ public class SvelteAmazinApplication {
         SpringApplication.run(SvelteAmazinApplication.class, args);
     }
 
+
     @Bean
     public CommandLineRunner demo(BookRepository bookRepository) {
 

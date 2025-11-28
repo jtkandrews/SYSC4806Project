@@ -1,24 +1,18 @@
 <script lang="ts">
   import '../app.css';
-  import { role, refreshRole, ownerLogin, logout } from '$lib/session';
+
+  // Session state & helpers
+  import { user, role, refreshSession, logout } from '$lib/session';
   import { cartItemCount } from '$lib/stores/cart';
   import { onMount } from 'svelte';
 
-  let pw = '';
-  let error = '';
-
+  // Refresh session at startup
   onMount(() => {
-    refreshRole();
+    refreshSession();
   });
 
-  async function doLogin() {
-    error = '';
-    try {
-      await ownerLogin(pw);
-      pw = '';
-    } catch {
-      error = 'Incorrect password';
-    }
+  async function doLogout() {
+    await logout();
   }
 </script>
 
@@ -33,31 +27,31 @@
       <a href="/owner" class="underline">Owner</a>
 
       {#if $role === 'OWNER'}
+        <!-- Owner controls -->
         <span class="text-gray-700">Role: OWNER</span>
+
         <button
                 class="bg-blue-600 text-white px-3 py-1 rounded"
-                on:click={() => logout()}
+                on:click={doLogout}
         >
           Logout
         </button>
+
       {:else}
-        <a href="/cart" class="underline">Cart ({$cartItemCount})</a>
+        <!-- Normal user controls -->
+        <a href="/cart" class="underline">
+          Cart ({$cartItemCount})
+        </a>
+
         <span class="text-gray-700">Role: USER</span>
-        <input
-                type="password"
-                placeholder="Owner password"
-                bind:value={pw}
-                class="border px-2 py-1 rounded"
-        />
-        <button
+
+        <!-- Go to dedicated login page -->
+        <a
+                href="/login"
                 class="bg-blue-600 text-white px-3 py-1 rounded"
-                on:click={doLogin}
         >
-          Login as Owner
-        </button>
-        {#if error}
-          <span class="text-red-600">{error}</span>
-        {/if}
+          Login
+        </a>
       {/if}
     </div>
   </nav>
