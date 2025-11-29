@@ -35,7 +35,7 @@ public class AuthController {
     // POST /api/auth/user-login { username, password }
     // --------------------------------------------
     @PostMapping("/user-login")
-    public Map<String, String> userLogin(@RequestBody Map<String, String> body, HttpServletResponse res) {
+    public Map<String, Object> userLogin(@RequestBody Map<String, String> body, HttpServletResponse res) {
         String username = body.getOrDefault("username", "");
         String password = body.getOrDefault("password", "");
 
@@ -58,7 +58,7 @@ public class AuthController {
         res.addCookie(userCookie);
 
         return Map.of(
-                "id", u.getId(),
+                "id", (Object) u.getId(),
                 "username", u.getUsername(),
                 "role", u.getRole()
         );
@@ -69,7 +69,7 @@ public class AuthController {
     // POST /api/auth/owner-login { password }
     // --------------------------------------------
     @PostMapping("/owner-login")
-    public Map<String, String> ownerLogin(@RequestBody Map<String, String> body, HttpServletResponse res) {
+    public Map<String, Object> ownerLogin(@RequestBody Map<String, String> body, HttpServletResponse res) {
         String pw = body.getOrDefault("password", "");
 
         // either check database via AuthService OR use config

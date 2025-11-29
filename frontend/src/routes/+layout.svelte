@@ -22,46 +22,47 @@
   }
 </script>
 
-<header>
-  <nav class="flex justify-between items-center px-6 py-4 bg-white shadow">
-    <a href="/" class="logo" aria-label="Amazin Bookstore home">
-      <img src="/amazin.png" alt="Amazin Bookstore logo" class="logo-image" width="140" />
-    </a>
+{#if data?.showNav}
+  <header>
+    <nav class="flex justify-between items-center px-6 py-4 bg-white shadow">
+      <a href="/" class="logo" aria-label="Amazin Bookstore home">
+        <img src="/amazin.png" alt="Amazin Bookstore logo" class="logo-image" width="140" />
+      </a>
 
-    <div class="flex items-center gap-3 text-sm">
-      <a href="/" class="underline">Browse</a>
-      <a href="/owner" class="underline">Owner</a>
+      <div class="flex items-center gap-3 text-sm">
+        <a href="/" class="underline">Browse</a>
+        <a href="/owner" class="underline">Owner</a>
 
-      {#if $role === 'OWNER'}
-        <!-- Owner controls -->
-        <span class="text-gray-700">Role: OWNER ({$user?.username || 'owner'})</span>
+        {#if $role === 'OWNER'}
+          <!-- Owner controls -->
+          <span class="text-gray-700">Role: OWNER ({$user?.username || 'owner'})</span>
 
-        <button
-                class="bg-blue-600 text-white px-3 py-1 rounded"
-                on:click={doLogout}
-        >
-          Logout
-        </button>
+          <button
+                  class="bg-blue-600 text-white px-3 py-1 rounded"
+                  on:click={doLogout}
+          >
+            Logout
+          </button>
 
-      {:else}
-        <!-- Normal user controls -->
-        <a href="/cart" class="underline">
-          Cart ({$cartItemCount})
-        </a>
+        {:else}
+          <!-- Normal user controls -->
+          <a href="/cart" class="underline">
+            Cart ({$cartItemCount})
+          </a>
 
-        <span class="text-gray-700">Role: USER ({$user?.username || 'guest'})</span>
+          <span class="text-gray-700">Role: USER ({$user?.username || 'guest'})</span>
 
-        <!-- Go to dedicated login page -->
-        <a
-                href="/login"
-                class="bg-blue-600 text-white px-3 py-1 rounded"
-        >
-          Login
-        </a>
-      {/if}
-    </div>
-  </nav>
-</header>
+          <button
+                  class="bg-blue-600 text-white px-3 py-1 rounded"
+                  on:click={doLogout}
+          >
+            Logout
+          </button>
+        {/if}
+      </div>
+    </nav>
+  </header>
+{/if}
 
 <main class="min-h-[calc(100vh-80px)] bg-gray-50">
   <slot />
