@@ -3,7 +3,7 @@ import { writable } from 'svelte/store';
 export type Role = 'USER' | 'OWNER';
 
 export interface SessionUser {
-    id: number;
+    id?: number;
     username: string;
     role: Role;
 }
@@ -12,7 +12,7 @@ export const user = writable<SessionUser | null>(null);
 
 export const role = {
     subscribe: (run: (value: Role) => void) =>
-        user.subscribe(u => run(u?.role ?? 'USER'))
+        user.subscribe((u) => run(u?.role ?? 'USER'))
 };
 
 export async function refreshSession(fetchFn: typeof fetch = fetch): Promise<void> {
@@ -25,7 +25,7 @@ export async function refreshSession(fetchFn: typeof fetch = fetch): Promise<voi
         }
 
         const data = await r.json();
-        if (!data || !data.role) {
+        if (!data || !data.role || !data.username) {
             user.set(null);
             return;
         }
@@ -35,7 +35,6 @@ export async function refreshSession(fetchFn: typeof fetch = fetch): Promise<voi
             username: data.username,
             role: data.role === 'OWNER' ? 'OWNER' : 'USER'
         });
-
     } catch (err) {
         console.error('refreshSession failed:', err);
         user.set(null);
@@ -45,9 +44,12 @@ export async function refreshSession(fetchFn: typeof fetch = fetch): Promise<voi
 // Keep backward compatibility
 export const refreshRole = refreshSession;
 
-
-export async function userLogin(username: string, password: string, fetchFn: typeof fetch = fetch): Promise<void> {
-    const r = await fetchFn('/api/login', {
+export async function userLogin(
+    username: string,
+    password: string,
+    fetchFn: typeof fetch = fetch
+): Promise<void> {
+    const r = await fetchFn('/api/auth/user-login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -63,7 +65,6 @@ export async function userLogin(username: string, password: string, fetchFn: typ
     await refreshSession(fetchFn);
 }
 
-
 export async function ownerLogin(password: string, fetchFn: typeof fetch = fetch): Promise<void> {
     const r = await fetchFn('/api/auth/owner-login', {
         method: 'POST',
@@ -78,7 +79,6 @@ export async function ownerLogin(password: string, fetchFn: typeof fetch = fetch
 
     await refreshSession(fetchFn);
 }
-
 
 export async function logout(fetchFn: typeof fetch = fetch): Promise<void> {
     await fetchFn('/api/auth/logout', {

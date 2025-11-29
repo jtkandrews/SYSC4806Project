@@ -2,6 +2,7 @@ package com.amazin.svelteamazin.controller;
 
 import com.amazin.svelteamazin.model.User;
 import com.amazin.svelteamazin.service.AuthService;
+import com.amazin.svelteamazin.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,9 @@ public class AuthController {
     @Autowired
     private AuthService auth;
 
+    @Autowired
+    private UserService users;
+
     @Value("${app.owner-password}")
     private String configuredOwnerPassword;
 
@@ -40,13 +44,24 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
 
-        Cookie c = new Cookie("role", "USER");
-        c.setHttpOnly(true);
-        c.setPath("/");
-        c.setMaxAge((int) Duration.ofHours(12).getSeconds());
-        res.addCookie(c);
+        // Persist minimal session in cookies
+        Cookie roleCookie = new Cookie("role", u.getRole());
+        roleCookie.setHttpOnly(true);
+        roleCookie.setPath("/");
+        roleCookie.setMaxAge((int) Duration.ofHours(12).getSeconds());
+        res.addCookie(roleCookie);
 
-        return Map.of("role", u.getRole());
+        Cookie userCookie = new Cookie("username", u.getUsername());
+        userCookie.setHttpOnly(true);
+        userCookie.setPath("/");
+        userCookie.setMaxAge((int) Duration.ofHours(12).getSeconds());
+        res.addCookie(userCookie);
+
+        return Map.of(
+                "id", u.getId(),
+                "username", u.getUsername(),
+                "role", u.getRole()
+        );
     }
 
     // --------------------------------------------
@@ -63,11 +78,17 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bad password");
         }
 
-        Cookie c = new Cookie("role", "OWNER");
-        c.setHttpOnly(true);
-        c.setPath("/");
-        c.setMaxAge((int) Duration.ofHours(12).getSeconds());
-        res.addCookie(c);
+        Cookie roleCookie = new Cookie("role", "OWNER");
+        roleCookie.setHttpOnly(true);
+        roleCookie.setPath("/");
+        roleCookie.setMaxAge((int) Duration.ofHours(12).getSeconds());
+        res.addCookie(roleCookie);
+
+        Cookie userCookie = new Cookie("username", "owner");
+        userCookie.setHttpOnly(true);
+        userCookie.setPath("/");
+        userCookie.setMaxAge((int) Duration.ofHours(12).getSeconds());
+        res.addCookie(userCookie);
 
         return Map.of("role", "OWNER");
     }
@@ -78,11 +99,17 @@ public class AuthController {
     // --------------------------------------------
     @PostMapping("/logout")
     public Map<String, String> logout(HttpServletResponse res) {
-        Cookie c = new Cookie("role", "");
-        c.setPath("/");
-        c.setMaxAge(0);
-        c.setHttpOnly(true);
-        res.addCookie(c);
+        Cookie roleCookie = new Cookie("role", "");
+        roleCookie.setPath("/");
+        roleCookie.setMaxAge(0);
+        roleCookie.setHttpOnly(true);
+        res.addCookie(roleCookie);
+
+        Cookie userCookie = new Cookie("username", "");
+        userCookie.setPath("/");
+        userCookie.setMaxAge(0);
+        userCookie.setHttpOnly(true);
+        res.addCookie(userCookie);
         return Map.of("status", "ok");
     }
 
@@ -91,17 +118,44 @@ public class AuthController {
     // GET /api/auth/me
     // --------------------------------------------
     @GetMapping("/me")
-    public Map<String, String> me(HttpServletRequest req) {
-        String role = "USER";
+    public Map<String, Object> me(HttpServletRequest req) {
+        String username = null;
+        String role = null;
 
         if (req.getCookies() != null) {
             for (Cookie c : req.getCookies()) {
                 if ("role".equals(c.getName())) {
-                    if ("OWNER".equals(c.getValue())) role = "OWNER";
-                    break;
+                    role = c.getValue();
+                } else if ("username".equals(c.getName())) {
+                    username = c.getValue();
                 }
             }
         }
-        return Map.of("role", role);
+
+        if (role == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not logged in");
+        }
+
+        // Try to load the user if present in DB
+        if (username != null) {
+            User u = users.findByUsername(username);
+            if (u != null) {
+                return Map.of(
+                        "id", u.getId(),
+                        "username", u.getUsername(),
+                        "role", u.getRole()
+                );
+            }
+        }
+
+        // Fallback for owner login using configured password
+        if ("OWNER".equals(role)) {
+            return Map.of(
+                    "username", username == null ? "owner" : username,
+                    "role", "OWNER"
+            );
+        }
+
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not logged in");
     }
 }

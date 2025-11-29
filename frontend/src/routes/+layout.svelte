@@ -6,13 +6,19 @@
   import { cartItemCount } from '$lib/stores/cart';
   import { onMount } from 'svelte';
 
-  // Refresh session at startup
+  export let data;
+
+  // Seed the client store from server-loaded session data
   onMount(() => {
-    refreshSession();
+    user.set(data?.session ?? null);
+    if (!data?.session) {
+      refreshSession();
+    }
   });
 
   async function doLogout() {
     await logout();
+    window.location.href = '/login';
   }
 </script>
 
@@ -28,7 +34,7 @@
 
       {#if $role === 'OWNER'}
         <!-- Owner controls -->
-        <span class="text-gray-700">Role: OWNER</span>
+        <span class="text-gray-700">Role: OWNER ({$user?.username || 'owner'})</span>
 
         <button
                 class="bg-blue-600 text-white px-3 py-1 rounded"
@@ -43,7 +49,7 @@
           Cart ({$cartItemCount})
         </a>
 
-        <span class="text-gray-700">Role: USER</span>
+        <span class="text-gray-700">Role: USER ({$user?.username || 'guest'})</span>
 
         <!-- Go to dedicated login page -->
         <a
