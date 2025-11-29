@@ -2,31 +2,35 @@
     import { goto } from '$app/navigation';
     import { ownerLogin, userLogin } from '$lib/session';
 
-    let mode: 'user' | 'owner' = 'user';
     let username = '';
     let password = '';
-    let ownerPassword = '';
     let error = '';
+    let isSubmitting = false;
 
     async function submit() {
         error = '';
+        if (!username.trim() || !password) {
+            error = 'Enter a username and password.';
+            return;
+        }
+
+        isSubmitting = true;
         try {
-            if (mode === 'user') {
-                if (!username.trim() || !password) {
-                    error = 'Enter a username and password.';
-                    return;
-                }
+            // Try user login first; if that fails and username is owner, fall back to owner login
+            try {
                 await userLogin(username.trim(), password);
-            } else {
-                if (!ownerPassword) {
-                    error = 'Enter the owner password.';
-                    return;
+            } catch (err) {
+                if (username.trim().toLowerCase() === 'owner') {
+                    await ownerLogin(password);
+                } else {
+                    throw err;
                 }
-                await ownerLogin(ownerPassword);
             }
             await goto('/');
         } catch (err) {
             error = err instanceof Error ? err.message : 'Login failed';
+        } finally {
+            isSubmitting = false;
         }
     }
 </script>
@@ -35,54 +39,29 @@
     <div class="bg-white shadow rounded p-8 w-full max-w-md">
         <h1 class="text-2xl font-semibold mb-4 text-center">Sign in to Amazin</h1>
 
-        <div class="flex gap-2 mb-4">
-            <button
-                class={`flex-1 px-3 py-2 rounded border ${mode === 'user' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'}`}
-                on:click={() => (mode = 'user')}
-                type="button"
-            >
-                User Login
-            </button>
-            <button
-                class={`flex-1 px-3 py-2 rounded border ${mode === 'owner' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'}`}
-                on:click={() => (mode = 'owner')}
-                type="button"
-            >
-                Owner Login
-            </button>
+        <div class="flex flex-col gap-3">
+            <input
+                bind:value={username}
+                placeholder="Username"
+                class="border px-3 py-2 rounded"
+                autocomplete="username"
+            />
+
+            <input
+                type="password"
+                bind:value={password}
+                placeholder="Password"
+                class="border px-3 py-2 rounded"
+                autocomplete="current-password"
+            />
         </div>
 
-        {#if mode === 'user'}
-            <div class="flex flex-col gap-3">
-                <input
-                    bind:value={username}
-                    placeholder="Username"
-                    class="border px-3 py-2 rounded"
-                />
-
-                <input
-                    type="password"
-                    bind:value={password}
-                    placeholder="Password"
-                    class="border px-3 py-2 rounded"
-                />
-            </div>
-        {:else}
-            <div class="flex flex-col gap-3">
-                <input
-                    type="password"
-                    bind:value={ownerPassword}
-                    placeholder="Owner password"
-                    class="border px-3 py-2 rounded"
-                />
-            </div>
-        {/if}
-
         <button
-            class="bg-blue-600 text-white px-4 py-2 rounded w-full mt-6"
+            class="bg-blue-600 text-white px-4 py-2 rounded w-full mt-6 disabled:opacity-60"
             on:click={submit}
+            disabled={isSubmitting}
         >
-            {mode === 'user' ? 'Login as User' : 'Login as Owner'}
+            {isSubmitting ? 'Signing in...' : 'Login'}
         </button>
 
         {#if error}

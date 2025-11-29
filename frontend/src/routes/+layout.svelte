@@ -31,7 +31,6 @@
 
       <div class="flex items-center gap-3 text-sm">
         <a href="/" class="underline">Browse</a>
-        <a href="/owner" class="underline">Owner</a>
 
         {#if $role === 'OWNER'}
           <!-- Owner controls -->
