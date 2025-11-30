@@ -220,13 +220,13 @@
     }
   }
 
-  function handleAddToCart(book: Book) {
+  async function handleAddToCart(book: Book) {
     cartError = '';
     cartMessage = '';
     clearCartMessageTimeout();
 
     try {
-      addToCart(book);
+      await addToCart(book);
       cartMessage = `Added "${book.title}" to your cart.`;
       cartMessageTimeout = setTimeout(() => {
         cartMessage = '';

@@ -93,12 +93,12 @@
     }
   }
 
-  function handleAddToCart() {
+  async function handleAddToCart() {
     addToCartError = '';
     addToCartSuccess = '';
 
     try {
-      addToCart(currentBook, addToCartQuantity);
+      await addToCart(currentBook, addToCartQuantity);
       const copyText = addToCartQuantity === 1 ? 'copy' : 'copies';
       addToCartSuccess = `Added ${addToCartQuantity} ${copyText} of "${currentBook.title}" to your cart.`;
     } catch (error) {

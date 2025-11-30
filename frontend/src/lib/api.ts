@@ -36,38 +36,120 @@ export async function createBook(book: Partial<Book>, fetchFn: typeof fetch = fe
     return res.json();
 }
 
-export type CheckoutItem = {
+export type CartItemResponse = {
     isbn: string;
+    title: string;
+    price: number;
     quantity: number;
+    imageUrl: string;
+    inventory: number;
 };
 
-export async function checkoutCart(
-    items: CheckoutItem[],
-    fetchFn: typeof fetch = fetch
-): Promise<Book[]> {
-    const res = await fetchFn(`${API_BASE}/api/cart/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ items })
-    });
-
+export async function fetchCart(fetchFn: typeof fetch = fetch): Promise<CartItemResponse[]> {
+    const res = await fetchFn(`${API_BASE}/api/cart`, { credentials: 'include' });
     if (!res.ok) {
-        let message = `Checkout failed (${res.status})`;
-        try {
-            const data = await res.json();
-            if (typeof data?.message === 'string') {
-                message = data.message;
-            }
-        } catch {
-            const text = await res.text();
-            if (text) {
-                message = text;
-            }
-        }
+        throw new Error('Failed to load cart');
+    }
+    return res.json();
+}
+
+export async function setCartItemQuantity(
+    isbn: string,
+    quantity: number,
+    fetchFn: typeof fetch = fetch
+    ): Promise<CartItemResponse[]> {
+        const res = await fetchFn(`${API_BASE}/api/cart/items`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ isbn, quantity })
+        });
+    if (!res.ok) {
+        const message = await extractErrorMessage(res, 'Unable to update cart');
         throw new Error(message);
     }
 
     return res.json();
 }
+
+export async function deleteCartItem(
+    isbn: string,
+    fetchFn: typeof fetch = fetch
+): Promise<CartItemResponse[]> {
+    const res = await fetchFn(`${API_BASE}/api/cart/items/${encodeURIComponent(isbn)}`, {
+        method: 'DELETE',
+        credentials: 'include'
+    });
+
+    if (!res.ok) {
+        const message = await extractErrorMessage(res, 'Unable to remove item');
+        throw new Error(message);
+    }
+
+    return res.json();
+}
+
+export type OrderItemResponse = {
+    isbn: string;
+    title: string;
+    price: number;
+    quantity: number;
+    imageUrl: string;
+};
+
+export type OrderResponse = {
+    id: number;
+    createdAt: string;
+    items: OrderItemResponse[];
+};
+
+export type CheckoutResponse = {
+    order: OrderResponse;
+    updatedBooks: Book[];
+};
+
+export async function checkoutCart(fetchFn: typeof fetch = fetch): Promise<CheckoutResponse> {
+    const res = await fetchFn(`${API_BASE}/api/cart/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+
+    if (!res.ok) {
+        const message = await extractErrorMessage(res, `Checkout failed (${res.status})`);
+        throw new Error(message);
+    }
+
+    return res.json();
+}
+
+export async function fetchOrders(fetchFn: typeof fetch = fetch): Promise<OrderResponse[]> {
+    const res = await fetchFn(`${API_BASE}/api/orders`, { credentials: 'include' });
+    if (!res.ok) {
+        const message = await extractErrorMessage(res, 'Unable to load orders');
+        throw new Error(message);
+    }
+    return res.json();
+}
+
+async function extractErrorMessage(res: Response, fallback: string): Promise<string> {
+    try {
+        const data = await res.json();
+        if (typeof (data as { message?: string })?.message === 'string') {
+            return (data as { message: string }).message;
+        }
+    } catch {
+        // ignore
+    }
+
+    try {
+        const text = await res.text();
+        if (text) return text;
+    } catch {
+        // ignore
+    }
+
+    return fallback;
+}
+
 
