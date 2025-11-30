@@ -29,8 +29,9 @@
     isCheckingOut = true;
 
     try {
-      await checkout();
-      successMessage = 'Checkout complete! Your books are on the way.';
+      const order = await checkout();
+      const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
+      successMessage = `Checkout complete! Order #${order.id} (${itemCount} items) placed.`;
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : 'Checkout failed.';
     } finally {
@@ -38,41 +39,51 @@
     }
   }
 
-  function setItemQuantity(isbn: string, quantity: number) {
+  async function setItemQuantity(isbn: string, quantity: number) {
     errorMessage = '';
     successMessage = '';
 
     try {
-      updateCartItemQuantity(isbn, quantity);
+      await updateCartItemQuantity(isbn, quantity);
       return true;
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : 'Unable to update quantity.';
       return false;
     }
   }
+  async function handleRemove(isbn: string) {
+    errorMessage = '';
+    successMessage = '';
 
-  function incrementQuantity(isbn: string, current: number, available: number) {
+    try {
+      await removeFromCart(isbn);
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : 'Unable to remove item.';
+    }
+  }
+
+  async function incrementQuantity(isbn: string, current: number, available: number) {
     if (current >= available) {
       errorMessage = `Only ${available} copies remain in stock.`;
       return;
     }
-    setItemQuantity(isbn, current + 1);
+    await setItemQuantity(isbn, current + 1);
   }
 
-  function decrementQuantity(isbn: string, current: number) {
+  async function decrementQuantity(isbn: string, current: number) {
     if (current === 1) {
-      removeFromCart(isbn);
+      await removeFromCart(isbn);
       return;
     }
-    setItemQuantity(isbn, current - 1);
+    await setItemQuantity(isbn, current - 1);
   }
 
-  function handleQuantityChange(event: Event, isbn: string, current: number) {
+  async function handleQuantityChange(event: Event, isbn: string, current: number) {
     const target = event.target as HTMLInputElement;
     const next = parseInt(target.value, 10);
 
     if (!Number.isNaN(next)) {
-      const success = setItemQuantity(isbn, next);
+      const success = await setItemQuantity(isbn, next);
       if (!success) {
         target.value = current.toString();
       }
@@ -145,7 +156,7 @@
               {(item.quantity * item.price).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
             </p>
             <p class="availability">{item.available} remaining in stock</p>
-            <button class="btn btn-secondary" on:click={() => removeFromCart(item.isbn)}>Remove</button>
+            <button class="btn btn-secondary" on:click={() => handleRemove(item.isbn)}>Remove</button>
           </div>
         </div>
       {/each}

@@ -1,7 +1,14 @@
 import { derived, get, writable } from 'svelte/store';
-import { checkoutCart } from '$lib/api';
-import type { Book } from '$lib/types';
 import { booksStore } from './books';
+import {
+    checkoutCart,
+    deleteCartItem,
+    fetchCart,
+    setCartItemQuantity,
+    type CartItemResponse,
+    type OrderResponse
+} from '$lib/api';
+import type { Book } from '$lib/types';
 
 export type CartItem = {
     isbn: string;
@@ -12,6 +19,7 @@ export type CartItem = {
 };
 
 export const cartStore = writable<CartItem[]>([]);
+export const cartLoaded = writable(false);
 
 export const cartItemCount = derived(cartStore, (items) =>
     items.reduce((sum, item) => sum + item.quantity, 0)
@@ -21,7 +29,18 @@ export const cartTotalCost = derived(cartStore, (items) =>
     items.reduce((sum, item) => sum + item.quantity * item.price, 0)
 );
 
-export function addToCart(book: Book, quantity = 1): void {
+export async function loadCart(fetchFn: typeof fetch = fetch): Promise<void> {
+    const items = await fetchCart(fetchFn);
+    applyCart(items);
+    cartLoaded.set(true);
+}
+
+export function resetCart(): void {
+    cartStore.set([]);
+    cartLoaded.set(false);
+}
+
+export async function addToCart(book: Book, quantity = 1): Promise<void> {
     if (!Number.isInteger(quantity) || quantity <= 0) {
         throw new Error('Quantity must be at least 1.');
     }
@@ -40,26 +59,17 @@ export function addToCart(book: Book, quantity = 1): void {
         throw new Error(`Only ${availableInventory} copies of "${book.title}" remain.`);
     }
 
-    const updatedItems = existingItem
-        ? currentItems.map((item) =>
-              item.isbn === book.isbn ? { ...item, quantity: nextQuantity } : item
-          )
-          : [
-            ...currentItems,
-            {
-                isbn: book.isbn,
-                title: book.title,
-                price: book.price,
-                quantity,
-                imageUrl: book.imageUrl
-            }
-        ];
-    cartStore.set(updatedItems);
+    const updated = await setCartItemQuantity(book.isbn, nextQuantity);
+    applyCart(updated);
 }
 
-export function updateCartItemQuantity(isbn: string, quantity: number): void {
+export async function updateCartItemQuantity(isbn: string, quantity: number): Promise<void> {
     if (!Number.isInteger(quantity) || quantity < 0) {
         throw new Error('Quantity must be zero or a positive whole number.');
+    }
+    if (quantity === 0) {
+        await removeFromCart(isbn);
+        return;
     }
 
     const availableInventory = get(booksStore).find((b) => b.isbn === isbn)?.inventory ?? 0;
@@ -67,75 +77,41 @@ export function updateCartItemQuantity(isbn: string, quantity: number): void {
     if (quantity > availableInventory) {
         throw new Error(`Only ${availableInventory} copies remain in stock.`);
     }
-
-    const currentItems = get(cartStore);
-    const existingItem = currentItems.find((item) => item.isbn === isbn);
-
-    if (!existingItem) {
-        throw new Error('This item is not in your cart.');
-    }
-
-    if (quantity === 0) {
-        removeFromCart(isbn);
-        return;
-    }
-
-    cartStore.set(
-        currentItems.map((item) =>
-            item.isbn === isbn
-                ? {
-                      ...item,
-                      quantity
-                  }
-                : item
-        )
-    );
+    const updated = await setCartItemQuantity(isbn, quantity);
+    applyCart(updated);
 }
 
 
-export function removeFromCart(isbn: string): void {
-    const currentItems = get(cartStore);
-    cartStore.set(currentItems.filter((item) => item.isbn !== isbn));
+export async function removeFromCart(isbn: string): Promise<void> {
+    const updated = await deleteCartItem(isbn);
+    applyCart(updated);
 }
 
 export function clearCart(): void {
     cartStore.set([]);
 }
 
-export async function checkout(): Promise<void> {
-    const items = get(cartStore);
-    if (items.length === 0) {
-        throw new Error('Your cart is empty.');
-    }
-
-    const books = get(booksStore);
-    const updatedInventoryByIsbn: Record<string, number> = {};
-
-    for (const item of items) {
-        const book = books.find((b) => b.isbn === item.isbn);
-        if (!book) {
-            throw new Error(`The book with ISBN ${item.isbn} is no longer available.`);
-        }
-        if (item.quantity > book.inventory) {
-            throw new Error(`Only ${book.inventory} copies of "${book.title}" remain.`);
-        }
-        updatedInventoryByIsbn[item.isbn] = book.inventory - item.quantity;
-    }
-    const updatedBooks = await checkoutCart(
-        items.map((item) => ({ isbn: item.isbn, quantity: item.quantity }))
-    );
-
-    for (const book of updatedBooks) {
-        updatedInventoryByIsbn[book.isbn] = book.inventory;
-    }
-
-    booksStore.update((current) =>
-        current.map((book) =>
-            updatedInventoryByIsbn[book.isbn] !== undefined
-                ? { ...book, inventory: updatedInventoryByIsbn[book.isbn] }
-                : book
-        )
-    );
-
+export async function checkout(): Promise<OrderResponse> {
+    const response = await checkoutCart();
+    booksStore.update((current) => {
+        const inventoryMap = new Map(response.updatedBooks.map((book) => [book.isbn, book.inventory]));
+        return current.map((book) =>
+            inventoryMap.has(book.isbn) ? { ...book, inventory: inventoryMap.get(book.isbn) ?? book.inventory } : book
+        );
+    });
     clearCart();
+    return response.order;
+}
+
+function applyCart(items: CartItemResponse[]): void {
+    cartStore.set(
+        items.map((item) => ({
+            isbn: item.isbn,
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+            imageUrl: item.imageUrl
+        }))
+
+    );
 }

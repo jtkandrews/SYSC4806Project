@@ -2,22 +2,43 @@
   import '../app.css';
 
   // Session state & helpers
-  import { user, role, refreshSession, logout } from '$lib/session';
-  import { cartItemCount } from '$lib/stores/cart';
+  import { user, role, refreshSession, logout, type SessionUser } from '$lib/session';
+  import { cartItemCount, loadCart, resetCart } from '$lib/stores/cart';
+  import { get } from 'svelte/store';
   import { onMount } from 'svelte';
 
   export let data;
 
   // Seed the client store from server-loaded session data
   onMount(() => {
-    user.set(data?.session ?? null);
+    const sessionUser: SessionUser | null = data?.session
+            ? { ...data.session, role: data.session.role === 'OWNER' ? 'OWNER' : 'USER' }
+            : null;
+
+    user.set(sessionUser);
+
+    const loadUserCart = async () => {
+      const currentUser = get(user);
+      if (currentUser?.role === 'USER') {
+        try {
+          await loadCart();
+        } catch (err) {
+          console.error('Failed to load cart', err);
+        }
+      } else {
+        resetCart();
+      }
+    };
     if (!data?.session) {
-      refreshSession();
+      refreshSession().then(loadUserCart);
+    } else {
+      loadUserCart();
     }
   });
 
   async function doLogout() {
     await logout();
+    resetCart();
     window.location.href = '/login';
   }
 </script>
@@ -30,7 +51,7 @@
       </a>
 
       <div class="flex items-center gap-3 text-sm">
-        <a href="/" class="underline">Browse</a>
+        <a href="/" class="btn btn-secondary">Browse</a>
 
         {#if $role === 'OWNER'}
           <!-- Owner controls -->
@@ -45,16 +66,16 @@
 
         {:else}
           <!-- Normal user controls -->
-          <a href="/cart" class="underline">
+          <a href="/cart" class="btn btn-secondary">
             Cart ({$cartItemCount})
           </a>
 
-          <span class="text-gray-700">Role: USER ({$user?.username || 'guest'})</span>
 
-          <button
-                  class="bg-blue-600 text-white px-3 py-1 rounded"
-                  on:click={doLogout}
-          >
+          <a href="/orders" class="btn btn-secondary">Orders</a>
+
+          <span class="btn btn-secondary role-chip">Role: USER ({$user?.username || 'guest'})</span>
+
+          <button class="btn btn-primary" on:click={doLogout}>
             Logout
           </button>
         {/if}
@@ -68,6 +89,17 @@
 </main>
 
 <style>
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .role-chip {
+    cursor: default;
+    font-weight: 600;
+  }
   main {
     min-height: calc(100vh - 80px);
   }
