@@ -1,67 +1,67 @@
 <script lang="ts">
   import '../app.css';
-  import { role, refreshRole, ownerLogin, logout } from '$lib/session';
+
+  // Session state & helpers
+  import { user, role, refreshSession, logout } from '$lib/session';
   import { cartItemCount } from '$lib/stores/cart';
   import { onMount } from 'svelte';
 
-  let pw = '';
-  let error = '';
+  export let data;
 
+  // Seed the client store from server-loaded session data
   onMount(() => {
-    refreshRole();
+    user.set(data?.session ?? null);
+    if (!data?.session) {
+      refreshSession();
+    }
   });
 
-  async function doLogin() {
-    error = '';
-    try {
-      await ownerLogin(pw);
-      pw = '';
-    } catch {
-      error = 'Incorrect password';
-    }
+  async function doLogout() {
+    await logout();
+    window.location.href = '/login';
   }
 </script>
 
-<header>
-  <nav class="flex justify-between items-center px-6 py-4 bg-white shadow">
-    <a href="/" class="logo" aria-label="Amazin Bookstore home">
-      <img src="/amazin.png" alt="Amazin Bookstore logo" class="logo-image" width="140" />
-    </a>
+{#if data?.showNav}
+  <header>
+    <nav class="flex justify-between items-center px-6 py-4 bg-white shadow">
+      <a href="/" class="logo" aria-label="Amazin Bookstore home">
+        <img src="/amazin.png" alt="Amazin Bookstore logo" class="logo-image" width="140" />
+      </a>
 
-    <div class="flex items-center gap-3 text-sm">
-      <a href="/" class="underline">Browse</a>
-      <a href="/owner" class="underline">Owner</a>
+      <div class="flex items-center gap-3 text-sm">
+        <a href="/" class="underline">Browse</a>
 
-      {#if $role === 'OWNER'}
-        <span class="text-gray-700">Role: OWNER</span>
-        <button
-                class="bg-blue-600 text-white px-3 py-1 rounded"
-                on:click={() => logout()}
-        >
-          Logout
-        </button>
-      {:else}
-        <a href="/cart" class="underline">Cart ({$cartItemCount})</a>
-        <span class="text-gray-700">Role: USER</span>
-        <input
-                type="password"
-                placeholder="Owner password"
-                bind:value={pw}
-                class="border px-2 py-1 rounded"
-        />
-        <button
-                class="bg-blue-600 text-white px-3 py-1 rounded"
-                on:click={doLogin}
-        >
-          Login as Owner
-        </button>
-        {#if error}
-          <span class="text-red-600">{error}</span>
+        {#if $role === 'OWNER'}
+          <!-- Owner controls -->
+          <span class="text-gray-700">Role: OWNER ({$user?.username || 'owner'})</span>
+
+          <button
+                  class="bg-blue-600 text-white px-3 py-1 rounded"
+                  on:click={doLogout}
+          >
+            Logout
+          </button>
+
+        {:else}
+          <!-- Normal user controls -->
+          <a href="/cart" class="underline">
+            Cart ({$cartItemCount})
+          </a>
+
+          <span class="text-gray-700">Role: USER ({$user?.username || 'guest'})</span>
+
+          <button
+                  class="bg-blue-600 text-white px-3 py-1 rounded"
+                  on:click={doLogout}
+          >
+            Logout
+          </button>
         {/if}
-      {/if}
-    </div>
-  </nav>
-</header>
+      </div>
+    </nav>
+  </header>
+{/if}
 
 <main class="min-h-[calc(100vh-80px)] bg-gray-50">
   <slot />
