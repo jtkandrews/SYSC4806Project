@@ -59,5 +59,73 @@ public class BookTest {
         assertEquals(7, book.getInventory());
         assertEquals("http://example.com/img.png", book.getImageUrl());
     }
+
+    @Test
+    void testMultipleGenresAsCommaSeparatedString() {
+        // Test that genre field can store multiple genres as comma-separated values
+        Book book = new Book();
+        book.setIsbn("978-0-123456-47-2");
+        book.setTitle("Multi-Genre Book");
+        book.setAuthor("Author Name");
+        book.setPublisher("Publisher Name");
+        book.setGenre("Fiction, Mystery, Thriller");
+        book.setDescription("A book with multiple genres");
+        book.setPrice(24.99);
+        book.setInventory(10);
+        book.setImageUrl("http://example.com/image.jpg");
+
+        assertEquals("Fiction, Mystery, Thriller", book.getGenre());
+        assertTrue(book.getGenre().contains("Fiction"));
+        assertTrue(book.getGenre().contains("Mystery"));
+        assertTrue(book.getGenre().contains("Thriller"));
+    }
+
+    @Test
+    void testSingleGenre() {
+        // Test that genre field works with single genre
+        Book book = new Book("isbn123", "Single Genre Book", "Author", "Publisher",
+                "Science Fiction", "A sci-fi book", 19.99, 5, "http://example.com/img.jpg");
+
+        assertEquals("Science Fiction", book.getGenre());
+        assertFalse(book.getGenre().contains(","));
+    }
+
+    @Test
+    void testNullGenre() {
+        // Test that genre field can be null (optional field)
+        Book book = new Book();
+        book.setIsbn("978-0-123456-47-2");
+        book.setTitle("No Genre Book");
+        book.setAuthor("Author Name");
+        book.setPublisher("Publisher Name");
+        book.setGenre(null);
+        book.setDescription("A book without genre");
+        book.setPrice(15.99);
+        book.setInventory(3);
+        book.setImageUrl("http://example.com/image.jpg");
+
+        assertNull(book.getGenre());
+    }
+
+    @Test
+    void testEmptyGenre() {
+        // Test that genre field can be empty string
+        Book book = new Book("isbn456", "Empty Genre Book", "Author", "Publisher",
+                "", "A book with empty genre", 12.99, 7, "http://example.com/img.jpg");
+
+        assertEquals("", book.getGenre());
+        assertNotNull(book.getGenre());
+    }
+
+    @Test
+    void testLongGenreString() {
+        // Test that genre field can handle long comma-separated list
+        String longGenreList = "Fiction, Non-Fiction, Science Fiction, Fantasy, Mystery, Thriller, Romance, Horror, Biography, History";
+        Book book = new Book();
+        book.setGenre(longGenreList);
+
+        assertEquals(longGenreList, book.getGenre());
+        assertTrue(book.getGenre().split(", ").length >= 10);
+    }
 }
 

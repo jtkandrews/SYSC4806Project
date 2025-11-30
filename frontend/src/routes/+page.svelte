@@ -12,6 +12,35 @@
   export let data;
   setBooks(data.initialBooks || [])
 
+  // Predefined genre options
+  const genreOptions = [
+    'Fiction',
+    'Non-Fiction',
+    'Science Fiction',
+    'Fantasy',
+    'Mystery',
+    'Thriller',
+    'Romance',
+    'Horror',
+    'Biography',
+    'History',
+    'Self-Help',
+    'Poetry',
+    'Drama',
+    'Adventure',
+    'Children\'s',
+    'Young Adult',
+    'Graphic Novel',
+    'Cookbook',
+    'Travel',
+    'Science',
+    'Philosophy',
+    'Religion',
+    'Historical Fiction',
+    'Business',
+    'Other'
+  ];
+
   let showAddBookModal = false;
   let isSubmitting = false;
   let addError = '';
@@ -24,7 +53,7 @@
     author: '',
     isbn: '',
     description: '',
-    genre: '',
+    genres: [] as string[],
     price: '',
     inventory: ''
   };
@@ -45,10 +74,18 @@
       author: '',
       isbn: '',
       description: '',
-      genre: '',
+      genres: [],
       price: '',
       inventory: ''
     };
+  }
+
+  function handleGenreToggle(genre: string) {
+    if (formData.genres.includes(genre)) {
+      formData.genres = formData.genres.filter(g => g !== genre);
+    } else {
+      formData.genres = [...formData.genres, genre];
+    }
   }
 
   // @ts-ignore
@@ -78,12 +115,6 @@
     const isbnDigits = formData.isbn.replace(/\D/g, '');
     if (isbnDigits.length !== 13) {
       addError = 'ISBN must be exactly 13 digits';
-      return;
-    }
-
-    // Genre length
-    if (formData.genre.length > 100) {
-      addError = 'Genre cannot exceed 100 characters';
       return;
     }
 
@@ -123,7 +154,7 @@
         isbn: isbnDigits,
         title: formData.title,
         author: formData.author,
-        genre: formData.genre || undefined,
+        genre: formData.genres.length > 0 ? formData.genres.join(', ') : undefined,
         price,
         inventory,
         imageUrl: `https://covers.openlibrary.org/b/isbn/${isbnDigits}-L.jpg`,
@@ -365,16 +396,22 @@
         </div>
 
         <div class="form-group">
-          <label for="genre">
-            <span>Genre</span>
+          <label>
+            <span>Genres (Select all that apply)</span>
           </label>
-          <input
-                  type="text"
-                  id="genre"
-                  bind:value={formData.genre}
-                  maxlength="100"
-                  placeholder="Enter book genre (e.g., Science Fiction)"
-          />
+          <div class="checkbox-grid">
+            {#each genreOptions as genre}
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  value={genre}
+                  checked={formData.genres.includes(genre)}
+                  on:change={() => handleGenreToggle(genre)}
+                />
+                <span>{genre}</span>
+              </label>
+            {/each}
+          </div>
         </div>
 
         <div class="form-group">
