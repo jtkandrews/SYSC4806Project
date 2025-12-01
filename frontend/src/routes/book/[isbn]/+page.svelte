@@ -47,6 +47,8 @@
   let isSubmitting = false;
   let editError = '';
   let mouseDownTarget: EventTarget | null = null;
+  let isDeleteConfirmOpen = false;
+  let isDeleting = false;
   let addToCartQuantity = 1;
   let addToCartError = '';
   let addToCartSuccess = '';
@@ -227,6 +229,41 @@
   function closeEditModal() {
     isEditModalOpen = false;
     editError = '';
+  }
+
+  function openDeleteConfirm() {
+    isDeleteConfirmOpen = true;
+  }
+
+  function closeDeleteConfirm() {
+    isDeleteConfirmOpen = false;
+  }
+
+  async function handleDeleteBook() {
+    isDeleting = true;
+    editError = '';
+
+    try {
+      const response = await fetch(`/api/owner/books/${data.book.isbn}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete book');
+      }
+
+      // Remove from store
+      booksStore.update((current) => current.filter((book) => book.isbn !== data.book.isbn));
+
+      // Redirect to home page
+      window.location.href = '/';
+    } catch (error) {
+      editError = error instanceof Error ? error.message : 'An error occurred while deleting the book';
+      console.error('Error deleting book:', error);
+      isDeleting = false;
+      isDeleteConfirmOpen = false;
+    }
   }
 
   // @ts-ignore
@@ -505,6 +542,67 @@
             </button>
           </div>
         </form>
+
+        <div class="modal-delete-section">
+          <hr class="modal-divider" />
+          <div class="delete-zone">
+            <div class="delete-info">
+              <h3>Danger Zone</h3>
+              <p>Once you delete this book, it will be permanently removed from the inventory.</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-danger"
+              on:click={openDeleteConfirm}
+              disabled={isSubmitting}
+            >
+              🗑️ Delete Book
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if $role === 'OWNER' && isDeleteConfirmOpen}
+  <!-- svelte-ignore a11y-no-noninteractive-element-interactions a11y-click-events-have-key-events -->
+  <div
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    on:click={(e) => e.target === e.currentTarget && closeDeleteConfirm()}
+  >
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions a11y-click-events-have-key-events -->
+    <div class="modal-content modal-small" role="document" on:click|stopPropagation>
+      <div class="modal-header">
+        <h2>Confirm Deletion</h2>
+        <button class="modal-close" on:click={closeDeleteConfirm} disabled={isDeleting}>✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="confirm-message">
+          Are you sure you want to delete <strong>{currentBook.title}</strong>? This action cannot be undone.
+        </p>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            on:click={closeDeleteConfirm}
+            disabled={isDeleting}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            on:click={handleDeleteBook}
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete Book'}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -584,5 +682,75 @@
     background: #fee2e2;
     color: #991b1b;
     border: 1px solid #fecaca;
+  }
+
+  .modal-delete-section {
+    margin-top: 2rem;
+  }
+
+  .modal-divider {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 1.5rem 0;
+  }
+
+  .delete-zone {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .delete-info h3 {
+    color: #991b1b;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .delete-info p {
+    color: #7f1d1d;
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .btn-danger {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
+  }
+
+  .btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .modal-small {
+    max-width: 400px;
+  }
+
+  .confirm-message {
+    margin: 1rem 0;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  .confirm-message strong {
+    color: #991b1b;
   }
 </style>
