@@ -154,7 +154,7 @@ The current version of the webapp can be seen [here](https://sysc4806project.azu
 
 In terms of implementation, the backend is configured as a Spring Boot app which exposes a read-only GET endpoint to list current library of books. This information is displayed via Svelte on the frontend, which fetches the books and displays a stylized grid of books. 
 
-In regard to deployment, the frontend build is currently being copied into Spring Boot's static resources, from which a single JAR is created. We recognize this situation may not be ideal, and as such we have future plans to potentially address this process. 
+In regard to deployment, the frontend build is currently being copied into Spring Boot's static resources, from which a single JAR is created.
 <div align="center">
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/f136e0d6-2b93-4350-9119-b1aea6689d6e" />
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/bc82d9d6-fc37-46f9-9c6e-eb8b953013e2" />
