@@ -75,6 +75,8 @@ Each record represents one book listed in the bookstore.
 
 </details>
 
+</details>
+
 # Milestone 2 ![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/2)
 
 <details>
@@ -135,6 +137,40 @@ Each record represents one book listed in the bookstore.
 </div>
 
 </details>
+
+# Milestone 3 ![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/3)
+
+<details>
+<summary>Summary of Milestone 3</summary>
+ 
+## Objectives Completed
+- [x] Added Order History
+- [x] Finished development for book recommendations
+- [x] Added sorting and filtering
+- [x] Added the ability for the protected owner mode to delete books
+- [x] Updated Tests
+
+The current version of the webapp can be seen [here](https://sysc4806project.azurewebsites.net/). 
+
+In terms of implementation, the backend is configured as a Spring Boot app which exposes a read-only GET endpoint to list current library of books. This information is displayed via Svelte on the frontend, which fetches the books and displays a stylized grid of books. 
+
+In regard to deployment, the frontend build is currently being copied into Spring Boot's static resources, from which a single JAR is created.
+<div align="center">
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/f136e0d6-2b93-4350-9119-b1aea6689d6e" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/bc82d9d6-fc37-46f9-9c6e-eb8b953013e2" />
+</div>
+
+## Database Schema
+<div align="center">
+<img width="700" alt="SvelteAmazinDB schema" src="https://github.com/user-attachments/assets/0f408ea6-403e-415b-9b1d-d8ef5c2edb4c" />
+</div>
+## UML Model
+<div align="center">
+<img width="700" alt="Miestone3" src="https://github.com/user-attachments/assets/e1efa02c-d286-471a-a2ae-1119eb9a43f0" />
+
+</div>
+
+
 
 # The Team
 [Grant Phillips](https://github.com/grantphillips13) \
