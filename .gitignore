@@ -1,1 +1,4 @@
 /.idea/
+*.mv.db
+*.trac.db
+SvelteAmazin/data

@@ -674,7 +674,8 @@
   }
 
   .form-group input,
-  .form-group textarea {
+  .form-group textarea,
+  .form-group select {
     width: 100%;
     padding: 0.625rem;
     border: 1px solid var(--border);
@@ -688,11 +689,55 @@
     word-break: break-word;
   }
 
+  .form-group select {
+    background-color: white;
+    cursor: pointer;
+  }
+
   .form-group input:focus,
-  .form-group textarea:focus {
+  .form-group textarea:focus,
+  .form-group select:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  /* Checkbox Grid Styles */
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+    font-weight: 400;
+  }
+
+  .checkbox-label:hover {
+    background-color: rgba(37, 99, 235, 0.05);
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .checkbox-label span {
+    user-select: none;
   }
 
   .form-row {

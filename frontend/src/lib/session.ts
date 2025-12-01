@@ -1,38 +1,83 @@
-// Cookie-backed session helpers for the real owner mode.
-// We never read cookies on the client (HttpOnly). Instead we ask the backend
-// via /api/auth/me and store the role in a Svelte store for UI convenience.
-
 import { writable } from 'svelte/store';
 
 export type Role = 'USER' | 'OWNER';
 
-export const role = writable<Role>('USER');
+export interface SessionUser {
+    id?: number;
+    username: string;
+    role: Role;
+}
 
-export async function refreshRole(fetchFn: typeof fetch = fetch): Promise<void> {
+export const user = writable<SessionUser | null>(null);
+
+export const role = {
+    subscribe: (run: (value: Role) => void) =>
+        user.subscribe((u) => run(u?.role ?? 'USER'))
+};
+
+export async function refreshSession(fetchFn: typeof fetch = fetch): Promise<void> {
     try {
         const r = await fetchFn('/api/auth/me', { credentials: 'include' });
+
         if (!r.ok) {
-            role.set('USER');
+            user.set(null);
             return;
         }
-        const data = (await r.json()) as { role?: string };
-        role.set(data.role === 'OWNER' ? 'OWNER' : 'USER');
-    } catch {
-        role.set('USER');
+
+        const data = await r.json();
+        if (!data || !data.role || !data.username) {
+            user.set(null);
+            return;
+        }
+
+        user.set({
+            id: data.id,
+            username: data.username,
+            role: data.role === 'OWNER' ? 'OWNER' : 'USER'
+        });
+    } catch (err) {
+        console.error('refreshSession failed:', err);
+        user.set(null);
     }
+}
+
+// Keep backward compatibility
+export const refreshRole = refreshSession;
+
+export async function userLogin(
+    username: string,
+    password: string,
+    fetchFn: typeof fetch = fetch
+): Promise<void> {
+    const r = await fetchFn('/api/auth/user-login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ username, password })
+    });
+
+    if (!r.ok) {
+        throw new Error('Invalid username or password');
+    }
+
+    await refreshSession(fetchFn);
 }
 
 export async function ownerLogin(password: string, fetchFn: typeof fetch = fetch): Promise<void> {
     const r = await fetchFn('/api/auth/owner-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // include cookie set by server
+        credentials: 'include',
         body: JSON.stringify({ password })
     });
+
     if (!r.ok) {
         throw new Error('Incorrect owner password');
     }
-    await refreshRole(fetchFn);
+
+    await refreshSession(fetchFn);
 }
 
 export async function logout(fetchFn: typeof fetch = fetch): Promise<void> {
@@ -40,5 +85,6 @@ export async function logout(fetchFn: typeof fetch = fetch): Promise<void> {
         method: 'POST',
         credentials: 'include'
     });
-    await refreshRole(fetchFn);
+
+    user.set(null);
 }

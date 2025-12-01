@@ -1,375 +1,368 @@
 <script lang="ts">
-  import { role } from '$lib/session'; //
+  import { onMount } from "svelte";
+  import { derived } from "svelte/store";
+  import { role } from "$lib/session";
+  import { addToCart } from "$lib/stores/cart";
+  import { booksStore } from "$lib/stores/books";
+  import type { Book } from "$lib/types";
 
   export let data;
 
   let isEditModalOpen = false;
-  let editFormData = {
-    genre: data.book.genre || '',
-    description: data.book.description || '',
-    price: data.book.price,
-    inventory: data.book.inventory
-  };
+  let editError = "";
   let isSubmitting = false;
-  let editError = '';
-  let mouseDownTarget: EventTarget | null = null;
+  let addToCartQuantity = 1;
+  let addToCartError = "";
+  let addToCartSuccess = "";
 
-  // Compute the image URL from the ISBN
+  // Image URL
   $: imageUrl = `https://covers.openlibrary.org/b/isbn/${data.book.isbn}-L.jpg`;
 
-  // Reactive declaration to update form data when book data changes
-  $: if (data.book) {
-    if (!isEditModalOpen) {
-      // Only reset form data when modal is closed to avoid interfering with editing
-      editFormData = {
-        genre: data.book.genre || '',
-        description: data.book.description || '',
-        price: data.book.price,
-        inventory: data.book.inventory
-      };
+  const bookFromStore = derived(booksStore, ($books) =>
+    $books.find((b) => b.isbn === data.book.isbn)
+  );
+
+  let currentBook: Book = data.book;
+  $: currentBook = $bookFromStore ?? data.book;
+
+  // Sync store on mount
+  onMount(() => {
+    booksStore.update((current) => {
+      const idx = current.findIndex((b) => b.isbn === currentBook.isbn);
+      if (idx === -1) return [...current, currentBook];
+      const updated = [...current];
+      updated[idx] = { ...updated[idx], ...currentBook };
+      return updated;
+    });
+  });
+
+  // Quantity constraints
+  $: {
+    const max = Math.max(currentBook.inventory, 1);
+    if (addToCartQuantity > max) addToCartQuantity = max;
+    if (addToCartQuantity < 1) addToCartQuantity = 1;
+  }
+
+  function increaseAddToCartQuantity() {
+    if (addToCartQuantity < currentBook.inventory) addToCartQuantity++;
+  }
+  function decreaseAddToCartQuantity() {
+    if (addToCartQuantity > 1) addToCartQuantity--;
+  }
+
+  async function handleAddToCart() {
+    addToCartError = "";
+    addToCartSuccess = "";
+    try {
+      await addToCart(currentBook, addToCartQuantity);
+      addToCartSuccess = `Added ${addToCartQuantity} copy/copies of "${currentBook.title}".`;
+    } catch (err) {
+      addToCartError = err instanceof Error ? err.message : "Error adding to cart.";
     }
   }
 
-  function handleOverlayMouseDown(e: MouseEvent) {
-    mouseDownTarget = e.target;
+  // ---------- OWNER EDIT ----------
+  let editFormData = {
+    genres: [] as string[],
+    description: "",
+    price: 0,
+    inventory: 0
+  };
+
+  $: if (!isEditModalOpen) {
+    editFormData = {
+      genres: currentBook.genre ? currentBook.genre.split(", ").map((g) => g.trim()) : [],
+      description: currentBook.description || "",
+      price: currentBook.price,
+      inventory: currentBook.inventory
+    };
   }
 
-  function handleOverlayClick(e: MouseEvent) {
-    // Only close if the click started and ended on the overlay itself (not a drag)
-    if (e.target === mouseDownTarget && e.currentTarget === e.target) {
-      closeEditModal();
-    }
+  function handleEditGenreToggle(g: string) {
+    if (editFormData.genres.includes(g))
+      editFormData.genres = editFormData.genres.filter((x) => x !== g);
+    else editFormData.genres.push(g);
   }
 
   async function handleSaveEdit() {
     isSubmitting = true;
-    editError = '';
-
-    // Validate genre length
-    if (editFormData.genre.length > 100) {
-      editError = 'Genre cannot exceed 100 characters';
-      isSubmitting = false;
-      return;
-    }
-
-    // Validate description length
-    if (editFormData.description.length > 500) {
-      editError = 'Description cannot exceed 500 characters';
-      isSubmitting = false;
-      return;
-    }
-
-    // Validate price is greater than 0
-    if (editFormData.price <= 0) {
-      editError = 'Price must be greater than 0';
-      isSubmitting = false;
-      return;
-    }
-
-    // Validate price integer part is 4 digits max (before decimal)
-    const priceString = editFormData.price.toString();
-    const priceParts = priceString.split('.');
-    if (priceParts[0].length > 4) {
-      editError = 'Price cannot exceed 4 digits (max 9999.99)';
-      isSubmitting = false;
-      return;
-    }
-
-    // Validate inventory is 4 digits max
-    const inventoryString = editFormData.inventory.toString();
-    if (inventoryString.length > 4) {
-      editError = 'Inventory cannot exceed 4 digits (max 9999)';
-      isSubmitting = false;
-      return;
-    }
+    editError = "";
 
     try {
-      const response = await fetch(`/api/owner/books/${data.book.isbn}`, { //
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include', //
+      const res = await fetch(`/api/owner/books/${currentBook.isbn}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
-          isbn: data.book.isbn,
-          title: data.book.title,
-          author: data.book.author,
-          publisher: data.book.publisher,
-          genre: editFormData.genre,
+          isbn: currentBook.isbn,
+          title: currentBook.title,
+          author: currentBook.author,
+          publisher: currentBook.publisher,
+          genre: editFormData.genres.join(", "),
           description: editFormData.description,
-          imageUrl: imageUrl,
           price: editFormData.price,
-          inventory: editFormData.inventory
+          inventory: editFormData.inventory,
+          imageUrl
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update book');
-      }
+      if (!res.ok) throw new Error("Failed to update book.");
 
-      // Update the book data and trigger reactivity
-      data.book = await response.json();
+      const updated = await res.json();
+      currentBook = updated;
 
-      // Close modal
+      booksStore.update((list) =>
+        list.map((b) => (b.isbn === currentBook.isbn ? updated : b))
+      );
+
       isEditModalOpen = false;
-    } catch (error) {
-      editError = error instanceof Error ? error.message : 'An error occurred';
-      console.error('Error updating book:', error);
+    } catch (err) {
+      editError = err instanceof Error ? err.message : "Unknown error.";
     } finally {
       isSubmitting = false;
     }
   }
-
-  function openEditModal() {
-    editFormData = {
-      genre: data.book.genre || '',
-      description: data.book.description || '',
-      price: data.book.price,
-      inventory: data.book.inventory
-    };
-    editError = '';
-    isEditModalOpen = true;
-  }
-
-  function closeEditModal() {
-    isEditModalOpen = false;
-    editError = '';
-  }
-
-  // @ts-ignore
-  function handleEditPriceInput(e) {
-    // Limit to 4 digits before decimal point (e.g., 9999.99)
-    const input = e.target.value;
-
-    // Allow empty input - don't update editFormData
-    if (input === '' || input === null) {
-      return;
-    }
-
-    // Remove non-numeric except decimal point
-    let cleaned = input.replace(/[^\d.]/g, '');
-    // Split by decimal point
-    const parts = cleaned.split('.');
-    // Limit integer part to 4 digits and decimal part to 2 digits
-    if (parts[0].length > 4) {
-      parts[0] = parts[0].slice(0, 4);
-    }
-    if (parts[1] && parts[1].length > 2) {
-      parts[1] = parts[1].slice(0, 2);
-    }
-
-    // Only update if we have valid digits
-    if (parts[0] !== '') {
-      const newValue = parseFloat(parts.join('.'));
-      if (!isNaN(newValue)) {
-        editFormData.price = newValue;
-      }
-    }
-  }
-
-  // @ts-ignore
-  function handleEditInventoryInput(e) {
-    // Limit to 4 digits (max 9999)
-    const input = e.target.value;
-
-    // Allow empty input - don't update editFormData
-    if (input === '' || input === null) {
-      return;
-    }
-
-    const cleaned = input.replace(/\D/g, '').slice(0, 4);
-
-    // Only update if we have valid digits
-    if (cleaned !== '') {
-      const newValue = parseInt(cleaned);
-      if (!isNaN(newValue)) {
-        editFormData.inventory = newValue;
-      }
-    }
-  }
 </script>
 
-<div class="book-detail">
-  <div class="header-controls">
-    <a href="/" class="back-link">
-      <span>←</span>
-      <span>Back to Books</span>
-    </a>
-
-    {#if $role === 'OWNER'}
-      <button class="btn btn-secondary" on:click={openEditModal}>
-        ✎ Edit
-      </button>
-    {/if}
-  </div>
+<!-- PAGE LAYOUT -->
+<section class="book-detail">
+  <a href="/" class="back-link">← Back to Books</a>
 
   <div class="detail-header">
-    <h1 class="detail-title">{data.book.title}</h1>
-    <p class="detail-author">by {data.book.author}</p>
-    {#if data.book.publisher}
-      <p class="detail-meta">Published by {data.book.publisher}</p>
+    <h1 class="title">{currentBook.title}</h1>
+    <p class="author">by {currentBook.author}</p>
+    {#if currentBook.publisher}
+      <p class="publisher">Published by {currentBook.publisher}</p>
+    {/if}
+
+    {#if $role === "OWNER"}
+      <button class="edit-btn" on:click={() => (isEditModalOpen = true)}>
+        ✎ Edit Book
+      </button>
     {/if}
   </div>
 
-  <div class="detail-content">
-    <div class="detail-image-section">
-      {#if data.book.imageUrl}
-        <img src={data.book.imageUrl} alt="{data.book.title} cover" class="detail-image" />
-      {:else}
-        <div class="detail-image-placeholder">
-          <span>📚</span>
-        </div>
-      {/if}
-    </div>
-    <div class="detail-text-section">
-      {#if data.book.genre}
-        <p class="detail-info-item">
-          <strong>Genre:</strong> {data.book.genre}
-        </p>
-      {/if}
-      {#if data.book.description}
-        <p class="detail-description">{data.book.description}</p>
-      {:else}
-        <p class="detail-description" style="color: var(--text-secondary); font-style: italic;">
-          No description available for this book.
-        </p>
-      {/if}
+  <div class="detail-body">
+    <div class="image-section">
+      <img src={imageUrl} alt="{currentBook.title}" class="cover" />
     </div>
 
-    <div class="detail-price-section">
-      <div class="detail-price-info">
-        <p class="detail-price">
-          {data.book.price.toLocaleString(undefined, {style: 'currency', currency: 'USD'})}
-        </p>
-        <div class="detail-info">
-          <p class="detail-info-item">
-            <strong>ISBN:</strong> {data.book.isbn}
-          </p>
-          <p class="detail-info-item">
-            <strong>Stock:</strong>
-            {#if data.book.inventory > 0}
-              <span style="color: #10b981;">{data.book.inventory} {data.book.inventory === 1 ? 'copy' : 'copies'} available</span>
-            {:else}
-              <span style="color: #ef4444;">Out of stock</span>
-            {/if}
-          </p>
+    <div class="info-section">
+      {#if currentBook.genre}
+        <p class="genre"><strong>Genre:</strong> {currentBook.genre}</p>
+      {/if}
+
+      <p class="description">
+        {#if currentBook.description}
+          {currentBook.description}
+        {:else}
+          <span class="empty">No description available.</span>
+        {/if}
+      </p>
+
+      <p class="price">
+        {currentBook.price.toLocaleString(undefined, {
+          style: "currency",
+          currency: "USD"
+        })}
+      </p>
+
+      <p class="stock">
+        {#if currentBook.inventory > 0}
+          <span class="instock">{currentBook.inventory} in stock</span>
+        {:else}
+          <span class="outstock">Out of stock</span>
+        {/if}
+      </p>
+
+      <!-- USER ADD TO CART -->
+      {#if $role === "USER"}
+        <div class="cart-controls">
+          <button class="qty-btn" on:click={decreaseAddToCartQuantity}>−</button>
+          <input
+            class="qty-input"
+            type="number"
+            min="1"
+            max={currentBook.inventory}
+            bind:value={addToCartQuantity}
+          />
+          <button
+            class="qty-btn"
+            on:click={increaseAddToCartQuantity}
+            disabled={addToCartQuantity >= currentBook.inventory}
+          >
+            +
+          </button>
+
+          <button
+            class="add-cart-btn"
+            disabled={currentBook.inventory === 0}
+            on:click|preventDefault={handleAddToCart}
+          >
+            Add to Cart
+          </button>
         </div>
-      </div>
-      <button
-        class="btn btn-primary btn-add-cart-large"
-        disabled={data.book.inventory === 0}
-        on:click|preventDefault={() => {
-          // TODO: Add to cart functionality
-        }}
-      >
-        Add to Cart
-      </button>
+
+        {#if addToCartError}
+          <p class="feedback error">{addToCartError}</p>
+        {/if}
+
+        {#if addToCartSuccess}
+          <p class="feedback success">{addToCartSuccess}</p>
+        {/if}
+      {/if}
     </div>
   </div>
-</div>
+</section>
 
-{#if $role === 'OWNER' && isEditModalOpen}
-  <!-- svelte-ignore a11y-no-noninteractive-element-interactions a11y-click-events-have-key-events -->
-  <div
-    class="modal-overlay"
-    role="dialog"
-    aria-modal="true"
-    on:mousedown={handleOverlayMouseDown}
-    on:click={handleOverlayClick}
-    on:keydown={(e) => e.key === 'Escape' && closeEditModal()}
-  >
-    <!-- svelte-ignore a11y-no-noninteractive-element-interactions a11y-click-events-have-key-events -->
-    <div class="modal-content" role="document" on:click|stopPropagation>
+<!-- OWNER EDIT MODAL -->
+{#if $role === "OWNER" && isEditModalOpen}
+  <div class="modal-overlay">
+    <div class="modal">
       <div class="modal-header">
         <h2>Edit Book</h2>
-        <button class="modal-close" on:click={closeEditModal}>✕</button>
+        <button class="close" on:click={() => (isEditModalOpen = false)}>✕</button>
       </div>
 
       <div class="modal-body">
         {#if editError}
-          <div class="error-message">{editError}</div>
+          <p class="feedback error">{editError}</p>
         {/if}
 
-        <form on:submit|preventDefault={handleSaveEdit}>
-          <div class="form-group">
-            <label for="genre">
-              <span>Genre</span>
-            </label>
-            <input
-              type="text"
-              id="genre"
-              bind:value={editFormData.genre}
-              maxlength="100"
-              placeholder="e.g., Fiction, Non-Fiction, Science Fiction"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="description">
-              <span>Description</span>
-            </label>
-            <textarea
-              id="description"
-              bind:value={editFormData.description}
-              maxlength="500"
-              placeholder="Enter a description of the book"
-              rows="5"
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="imageUrl">Image URL</label>
-            <input
-              type="text"
-              id="imageUrl"
-              value={imageUrl}
-              disabled
-              readonly
-            />
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="price">
-                <span>Price</span>
-              </label>
+        <label>Genres</label>
+        <div class="genre-grid">
+          {#each ["Fiction", "Fantasy", "Action", "Romance", "Mystery", "Thriller", "Biography", "History", "Other"] as g}
+            <label class="checkbox">
               <input
-                type="number"
-                id="price"
-                bind:value={editFormData.price}
-                on:input={handleEditPriceInput}
-                step="0.01"
-                min="0.01"
-                required
+                type="checkbox"
+                value={g}
+                checked={editFormData.genres.includes(g)}
+                on:change={() => handleEditGenreToggle(g)}
               />
-            </div>
+              {g}
+            </label>
+          {/each}
+        </div>
 
-            <div class="form-group">
-              <label for="inventory">
-                <span>Inventory</span>
-              </label>
-              <input
-                type="number"
-                id="inventory"
-                bind:value={editFormData.inventory}
-                on:input={handleEditInventoryInput}
-                step="1"
-                min="0"
-                required
-              />
-            </div>
-          </div>
+        <label>Description</label>
+        <textarea bind:value={editFormData.description}></textarea>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" on:click={closeEditModal} disabled={isSubmitting}>
-              Cancel
-            </button>
-            <button type="submit" class="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
+        <label>Price</label>
+        <input type="number" bind:value={editFormData.price} min="1" step="0.01" />
+
+        <label>Inventory</label>
+        <input type="number" bind:value={editFormData.inventory} min="0" step="1" />
+
+        <div class="modal-footer">
+          <button class="cancel-btn" on:click={() => (isEditModalOpen = false)}>Cancel</button>
+          <button class="save-btn" on:click={handleSaveEdit} disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
       </div>
     </div>
   </div>
 {/if}
+
+<style>
+  .back-link { text-decoration:none; color:#2563eb; font-size:1rem; }
+  .book-detail { max-width:1100px; margin:auto; padding:2rem; }
+
+  .detail-header { margin-bottom:1.5rem; }
+  .title { font-size:2rem; font-weight:700; }
+  .author { font-size:1.2rem; color:#555; margin-top:0.2rem; }
+  .publisher { color:#777; }
+
+  .edit-btn {
+    margin-top:1rem;
+    background:#2563eb;
+    color:white;
+    padding:.4rem 1rem;
+    border:none;
+    border-radius:4px;
+  }
+
+  .detail-body { display:flex; gap:2rem; margin-top:2rem; }
+  .image-section { flex:1; }
+  .cover { width:100%; border-radius:10px; }
+
+  .info-section { flex:2; }
+
+  .genre { margin-top:.3rem; color:#333; }
+  .description { margin:1rem 0; line-height:1.4; }
+  .empty { color:#888; font-style:italic; }
+
+  .price { margin-top:1rem; font-size:1.5rem; font-weight:700; }
+  .instock { color:#16a34a; }
+  .outstock { color:#dc2626; }
+
+  .cart-controls { display:flex; gap:.5rem; margin-top:1rem; }
+  .qty-btn { width:2.5rem; height:2.5rem; border-radius:50%; border:none; background:#ddd; }
+  .qty-input { width:3rem; text-align:center; }
+
+  .add-cart-btn {
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:.5rem 1rem;
+    border-radius:6px;
+  }
+
+  .feedback { margin-top:.5rem; padding:.5rem; border-radius:6px; }
+  .feedback.error { background:#fee2e2; color:#991b1b; }
+  .feedback.success { background:#dcfce7; color:#166534; }
+
+  /* MODAL */
+  .modal-overlay {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,.5);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .modal {
+    background:white;
+    padding:1.5rem;
+    border-radius:10px;
+    width:500px;
+  }
+
+  .modal-header { display:flex; justify-content:space-between; align-items:center; }
+  .close { background:none; border:none; font-size:1.5rem; cursor:pointer; }
+
+  .modal-body label { margin-top:1rem; display:block; font-weight:600; }
+
+  textarea { width:100%; height:100px; }
+
+  .genre-grid {
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:.3rem;
+    margin-bottom:1rem;
+  }
+
+  .modal-footer {
+    margin-top:1.5rem;
+    display:flex;
+    justify-content:flex-end;
+    gap:.7rem;
+  }
+
+  .cancel-btn {
+    background:#ccc;
+    border:none;
+    padding:.5rem 1rem;
+    border-radius:6px;
+  }
+
+  .save-btn {
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:.5rem 1rem;
+    border-radius:6px;
+  }
+</style>
+
+
