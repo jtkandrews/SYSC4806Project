@@ -75,6 +75,8 @@ Each record represents one book listed in the bookstore.
 
 </details>
 
+</details>
+
 # Milestone 2 ![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/2)
 
 <details>
@@ -135,6 +137,52 @@ Each record represents one book listed in the bookstore.
 </div>
 
 </details>
+
+# Milestone 3 ![Milestone progress](https://img.shields.io/github/milestones/progress/jtkandrews/SYSC4806Project/3)
+
+<details>
+<summary>Summary of Milestone 3</summary>
+ 
+## Objectives Completed
+- [x] Added Order History
+- [x] Finished development for book recommendations
+- [x] Added sorting and filtering
+- [x] Added the ability for the protected owner mode to delete books
+- [x] Updated Tests
+
+The current version of the webapp can be seen [here](https://sysc4806project.azurewebsites.net/). 
+
+In terms of implementation, the backend is configured as a Spring Boot app which exposes a read-only GET endpoint to list current library of books. This information is displayed via Svelte on the frontend, which fetches the books and displays a stylized grid of books. 
+
+In regard to deployment, the frontend build is currently being copied into Spring Boot's static resources, from which a single JAR is created. We recognize this situation may not be ideal, and as such we have future plans to potentially address this process. 
+<div align="center">
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/f136e0d6-2b93-4350-9119-b1aea6689d6e" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/bc82d9d6-fc37-46f9-9c6e-eb8b953013e2" />
+</div>
+
+## Database Schema
+
+The system uses a single `BOOKS` table to store all book information.  
+Each record represents one book listed in the bookstore.
+
+| Column Name | Type | Description |
+|--------------|------|-------------|
+| `isbn` | VARCHAR(20) **PK** | Unique identifier for each book |
+| `title` | VARCHAR(255) | Title of the book |
+| `author` | VARCHAR(255) | Name of the author |
+| `publisher` | VARCHAR(255) | Publisher of the book |
+| `description` | VARCHAR(255) | Description of the book |
+| `genre` | VARCHAR(255) | Book genre (e.g., Fiction, Science, Biography) |
+| `price` | DOUBLE PRECISION | Price of the book |
+| `inventory` | INTEGER | Number of copies available |
+| `image_url` | VARCHAR(255) | URL of the book cover image |
+
+## UML Model
+<div align="center">
+<img width="400" alt="Screenshot 2025-11-16 155534" src="https://github.com/user-attachments/assets/d739992f-f687-4661-b211-f795b2e8953d" />
+</div>
+
+
 
 # The Team
 [Grant Phillips](https://github.com/grantphillips13) \
