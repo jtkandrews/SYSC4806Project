@@ -40,4 +40,14 @@ public class Order {
 
     public List<OrderItem> getItems() { return items; }
     public void setItems(List<OrderItem> items) { this.items = items; }
+
+    public List<String> getBookIsbns() {
+        List<String> bookIsbns = new ArrayList<>();
+
+        for (OrderItem orderItem : this.items) {
+            bookIsbns.add(orderItem.getIsbn());
+        }
+
+        return bookIsbns;
+    }
 }

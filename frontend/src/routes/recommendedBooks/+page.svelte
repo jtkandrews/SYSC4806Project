@@ -5,7 +5,7 @@
     const DISPLAY_COUNT = 8;
 
     export let data;
-    let books = data.initialBooks || [];
+    let books = data.recBooks || [];
 
     let bookIndex = 0;
     let timer: number;

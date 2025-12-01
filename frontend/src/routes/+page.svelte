@@ -249,6 +249,9 @@
         <h1 class="page-title">Browse Our Collection</h1>
         <p class="page-subtitle">Discover great books at amazin prices</p>
       </div>
+      <button class="btn btn-primary" on:click={() => goto('/recommendedBooks')}>
+        Go to Recommended Bookds
+      </button>
 
       {#if $role === 'OWNER'}
         <button class="btn btn-primary" on:click={openAddBookModal}>
@@ -260,14 +263,12 @@
             🛒 View Cart ({$cartItemCount})
           </a>
         </div>
+        <button class="btn btn-primary" on:click={() => goto('/recommendedBooks')}>
+          Go to Recommended Books
+        </button>
       {/if}
     </div>
   </div>
-
-
-  <button on:click={() => goto('/recommendedBooks')}>
-    Go to Recommended Books
-  </button>
 
   {#if $booksStore.length === 0}
     <div class="empty-state">
