@@ -179,7 +179,8 @@ Each record represents one book listed in the bookstore.
 
 ## UML Model
 <div align="center">
-<img width="400" alt="Screenshot 2025-11-16 155534" src="https://github.com/user-attachments/assets/d739992f-f687-4661-b211-f795b2e8953d" />
+<img width="700" alt="Miestone3" src="https://github.com/user-attachments/assets/4955c76b-2daa-4fdd-bbdc-a9fa060fd6a6" />
+
 </div>
 
 
