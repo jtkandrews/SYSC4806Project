@@ -1,11 +1,12 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
-    import {goto} from "$app/navigation";
+    import {onDestroy, onMount} from "svelte";
+    import type {Book} from "$lib/types";
+    import { addToCart } from '$lib/stores/cart';
 
     const DISPLAY_COUNT = 8;
 
     export let data;
-    let books = data.initialBooks || [];
+    let books = data.recBooks || [];
 
     let bookIndex = 0;
     let timer: number;
@@ -57,6 +58,38 @@
 
     //On variable change it will change variable value to be within bounds of 0 and display_count
     $: normalizedIndex = ((bookIndex % DISPLAY_COUNT) + DISPLAY_COUNT) % DISPLAY_COUNT;
+
+    let cartMessage = '';
+    let cartError = '';
+    let cartMessageTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    function clearCartMessageTimeout() {
+        if (cartMessageTimeout) {
+            clearTimeout(cartMessageTimeout);
+            cartMessageTimeout = null;
+        }
+    }
+
+    async function handleAddToCart(book: Book) {
+        cartError = '';
+        cartMessage = '';
+        clearCartMessageTimeout();
+
+        try {
+            await addToCart(book);
+            cartMessage = `Added "${book.title}" to your cart.`;
+            cartMessageTimeout = setTimeout(() => {
+                cartMessage = '';
+                cartMessageTimeout = null;
+            }, 2500);
+        } catch (error) {
+            cartError = error instanceof Error ? error.message : 'Unable to add book to cart.';
+        }
+    }
+
+    onDestroy(() => {
+        clearCartMessageTimeout();
+    });
 </script>
 
 <style>
@@ -269,8 +302,8 @@
     {#each books.slice(0, 8) as book, i}
         <!-- Container for book cards that will be displayed (block) or hidden (none)-->
         <div class="book-card" style="display: {i === normalizedIndex ? 'block' : 'none'};">
+<!--            <a href={`/book/${book.isbn}`} class="book-card-link">-->
             <div class="book-card-number">{i + 1}/8</div>
-
             <!-- If image url exists show image -->
             {#if book.imageUrl?.trim()}
                 <img
@@ -295,12 +328,16 @@
                 <p class="price">${book.price}</p>
 
                 <div class="button-container">
-<!--                    <form action="/api/cart" method="post">-->
-<!--                        <input type="hidden" name="bookIsbn" value={book.isbn} />-->
-                        <button class="add-to-cart-button cursor" type="submit" on:click={() => goto('/cart')}>Add to Cart</button>
-<!--                    </form>-->
+                    <button
+                            class="add-to-cart-button cursor"
+                            disabled={book.inventory === 0}
+                            on:click|stopPropagation|preventDefault={() => handleAddToCart(book)}
+                    >
+                        Add to Cart
+                    </button>
                 </div>
             </div>
+<!--            </a>-->
         </div>
     {/each}
 

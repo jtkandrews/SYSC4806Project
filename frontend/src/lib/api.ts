@@ -36,6 +36,12 @@ export async function createBook(book: Partial<Book>, fetchFn: typeof fetch = fe
     return res.json();
 }
 
+export async function getAllRecBooks(fetchFn: typeof fetch = fetch): Promise<Book[]> {
+    const res = await fetchFn(`${API_BASE}/api/books/recommended_books`);
+    if (!res.ok) throw new Error(`Failed to load recommended books (${res.status})`);
+    return res.json();
+}
+
 export type CartItemResponse = {
     isbn: string;
     title: string;
