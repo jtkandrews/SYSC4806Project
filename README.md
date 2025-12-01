@@ -179,7 +179,8 @@ Each record represents one book listed in the bookstore.
 
 ## UML Model
 <div align="center">
-<img width="700" alt="Miestone3" src="https://github.com/user-attachments/assets/4955c76b-2daa-4fdd-bbdc-a9fa060fd6a6" />
+<img width="700" alt="SvelteAmazinDB schema" src="https://github.com/user-attachments/assets/0f408ea6-403e-415b-9b1d-d8ef5c2edb4c" />
+
 
 </div>
 
