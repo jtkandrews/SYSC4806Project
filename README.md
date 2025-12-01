@@ -161,26 +161,12 @@ In regard to deployment, the frontend build is currently being copied into Sprin
 </div>
 
 ## Database Schema
-
-The system uses a single `BOOKS` table to store all book information.  
-Each record represents one book listed in the bookstore.
-
-| Column Name | Type | Description |
-|--------------|------|-------------|
-| `isbn` | VARCHAR(20) **PK** | Unique identifier for each book |
-| `title` | VARCHAR(255) | Title of the book |
-| `author` | VARCHAR(255) | Name of the author |
-| `publisher` | VARCHAR(255) | Publisher of the book |
-| `description` | VARCHAR(255) | Description of the book |
-| `genre` | VARCHAR(255) | Book genre (e.g., Fiction, Science, Biography) |
-| `price` | DOUBLE PRECISION | Price of the book |
-| `inventory` | INTEGER | Number of copies available |
-| `image_url` | VARCHAR(255) | URL of the book cover image |
-
-## UML Model
 <div align="center">
 <img width="700" alt="SvelteAmazinDB schema" src="https://github.com/user-attachments/assets/0f408ea6-403e-415b-9b1d-d8ef5c2edb4c" />
-
+</div>
+## UML Model
+<div align="center">
+<img width="700" alt="Miestone3" src="https://github.com/user-attachments/assets/e1efa02c-d286-471a-a2ae-1119eb9a43f0" />
 
 </div>
 
