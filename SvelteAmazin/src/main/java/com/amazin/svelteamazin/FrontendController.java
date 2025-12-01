@@ -1,4 +1,4 @@
-package com.amazin.svelteamazin.web;
+package com.amazin.svelteamazin;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
