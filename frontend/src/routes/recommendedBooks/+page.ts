@@ -1,7 +1,7 @@
-import { getAllBooks } from '$lib/api';
+import {getAllRecBooks} from '$lib/api';
 
 export const load = async ({ fetch }: { fetch: typeof globalThis.fetch }) => {
-    const books = await getAllBooks(fetch);
-    console.log('Loaded books:', books.length);
-    return { initialBooks: books };
+    const books = await getAllRecBooks(fetch);
+    console.log('Loaded recommended books:', books.length);
+    return { recBooks: books };
 };

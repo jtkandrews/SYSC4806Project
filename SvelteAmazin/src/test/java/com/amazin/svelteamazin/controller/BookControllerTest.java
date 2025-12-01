@@ -2,6 +2,7 @@ package com.amazin.svelteamazin.controller;
 
 import com.amazin.svelteamazin.model.Book;
 import com.amazin.svelteamazin.model.BookRepository;
+import com.amazin.svelteamazin.repository.OrderRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,10 +21,13 @@ class BookControllerTest {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private OrderRepository orderRepository;
+
     @BeforeEach
     void setUp() {
         // Instantiate the controller
-        bookController = new BookController(bookRepository);
+        bookController = new BookController(bookRepository, orderRepository);
         bookRepository.deleteAll();
 
         Book book1 = new Book("9780804139021", "The Martian", "Andy Weir", "Crown",
