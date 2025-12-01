@@ -6,6 +6,16 @@
   import { onDestroy } from 'svelte';
   import { addToCart, cartItemCount } from '$lib/stores/cart';
   import { addBookToStore, booksStore, setBooks } from '$lib/stores/books';
+  import {
+    filterState,
+    filteredSortedBooks,
+    updateSortBy,
+    toggleGenre,
+    updatePriceRange,
+    updateSearchTerm,
+    resetFilters,
+    type SortOption
+  } from '$lib/stores/filterSort';
   import type { Book } from '$lib/types';
 
 
@@ -47,6 +57,7 @@
   let cartMessage = '';
   let cartError = '';
   let cartMessageTimeout: ReturnType<typeof setTimeout> | null = null;
+  let showFilters = false;
 
   let formData = {
     title: '',
@@ -266,15 +277,121 @@
     </div>
   </div>
 
-  {#if $booksStore.length === 0}
+  <!-- Recommended page link is shown in the header for non-owners (no duplicate needed) -->
+  <!-- Filter and Sort Controls -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <h2>Filter & Sort</h2>
+      <button class="btn btn-secondary btn-sm" on:click={() => showFilters = !showFilters}>
+        {showFilters ? '▼ Hide Filters' : '▶ Show Filters'}
+      </button>
+    </div>
+
+    {#if showFilters}
+      <div class="filter-controls">
+        <!-- Search -->
+        <div class="filter-group">
+          <label for="search">Search Books:</label>
+          <input
+            type="text"
+            id="search"
+            placeholder="Search by title, author, or description..."
+            value={$filterState.searchTerm}
+            on:input={(e) => updateSearchTerm(e.currentTarget.value)}
+            class="filter-input"
+          />
+        </div>
+
+        <!-- Sort Options -->
+        <div class="filter-group">
+          <label for="sort">Sort By:</label>
+          <select
+            id="sort"
+            value={$filterState.sortBy}
+            on:change={(e) => {
+              // @ts-ignore
+              updateSortBy(e.currentTarget.value);
+            }}
+            class="filter-select"
+          >
+            <option value="none">None (Original Order)</option>
+            <option value="title-asc">Title (A-Z)</option>
+            <option value="title-desc">Title (Z-A)</option>
+            <option value="price-asc">Price (Low to High)</option>
+            <option value="price-desc">Price (High to Low)</option>
+            <option value="author-asc">Author (A-Z)</option>
+            <option value="author-desc">Author (Z-A)</option>
+          </select>
+        </div>
+
+        <!-- Price Range -->
+        <div class="filter-group">
+          <div>Price Range:</div>
+          <div class="price-range">
+            <div class="price-input-group">
+              <label for="min-price">Min:</label>
+              <input
+                type="number"
+                id="min-price"
+                min="0"
+                step="0.01"
+                value={$filterState.minPrice}
+                on:change={(e) => updatePriceRange(parseFloat(e.currentTarget.value) || 0, $filterState.maxPrice)}
+                class="filter-input-small"
+              />
+            </div>
+            <div class="price-input-group">
+              <label for="max-price">Max:</label>
+              <input
+                type="number"
+                id="max-price"
+                min="0"
+                step="0.01"
+                value={$filterState.maxPrice}
+                on:change={(e) => updatePriceRange($filterState.minPrice, parseFloat(e.currentTarget.value) || 10000)}
+                class="filter-input-small"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Genre Filter -->
+        <div class="filter-group">
+          <div>Filter by Genre:</div>
+          <div class="genre-filter-list">
+            {#each genreOptions as genre}
+              <label class="genre-checkbox">
+                <input
+                  type="checkbox"
+                  checked={$filterState.genres.includes(genre)}
+                  on:change={() => toggleGenre(genre)}
+                />
+                <span>{genre}</span>
+              </label>
+            {/each}
+          </div>
+        </div>
+
+        <!-- Reset Button -->
+        <button class="btn btn-secondary" on:click={() => resetFilters()}>
+          Reset Filters
+        </button>
+      </div>
+    {/if}
+  </div>
+
+  {#if $filteredSortedBooks.length === 0}
     <div class="empty-state">
-      <h2 class="empty-state-title">No books available</h2>
-      <p class="empty-state-text">Check back soon for new arrivals!</p>
+      <h2 class="empty-state-title">{$booksStore.length === 0 ? 'No books available' : 'No books match your filters'}</h2>
+      <p class="empty-state-text">{$booksStore.length === 0 ? 'Check back soon for new arrivals!' : 'Try adjusting your search criteria.'}</p>
     </div>
   {:else}
+    <div class="books-info">
+      <p>Showing <strong>{$filteredSortedBooks.length}</strong> of <strong>{$booksStore.length}</strong> books</p>
+    </div>
     <div class="books-grid">
       <!-- {#each books as book} -->
-      {#each $booksStore as book}
+      {#each $filteredSortedBooks as book}
         <div class="book-card">
           <a href={`/book/${book.isbn}`} class="book-card-link">
             {#if book.imageUrl?.trim()}
@@ -393,9 +510,7 @@
         </div>
 
         <div class="form-group">
-          <label>
-            <span>Genres (Select all that apply)</span>
-          </label>
+          <div style="font-weight: 600; margin-bottom: 0.5rem;">Genres (Select all that apply)</div>
           <div class="checkbox-grid">
             {#each genreOptions as genre}
               <label class="checkbox-label">
@@ -481,22 +596,131 @@
     align-items: center;
   }
 
-  .cart-feedback {
-    margin: 0 0 1rem 0;
-    padding: 0.75rem 1rem;
+  /* Filter and Sort Styles */
+  .filter-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f8f9fa;
     border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+  }
+
+  .filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .filter-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1f2937;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .filter-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding-top: 1rem;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filter-group label {
+    font-weight: 600;
+    color: #374151;
     font-size: 0.95rem;
   }
 
-  .cart-feedback.success {
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
+  .filter-input,
+  .filter-select {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.95rem;
+    background-color: white;
+    color: #1f2937;
   }
 
-  .cart-feedback.error {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+  .filter-input:focus,
+  .filter-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .price-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .price-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .price-input-group label {
+    font-weight: 500;
+    font-size: 0.85rem;
+  }
+
+  .filter-input-small {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.9rem;
+  }
+
+  .genre-filter-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .genre-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #374151;
+    user-select: none;
+  }
+
+  .genre-checkbox input[type="checkbox"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    cursor: pointer;
+    accent-color: #3b82f6;
+  }
+
+  .genre-checkbox:hover {
+    color: #1f2937;
+  }
+
+  .books-info {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    background: #e3f2fd;
+    border-left: 4px solid #3b82f6;
+    border-radius: 0.375rem;
+    color: #1565c0;
+    font-size: 0.95rem;
+  }
+
+  .books-info strong {
+    color: #0d47a1;
   }
 </style>
