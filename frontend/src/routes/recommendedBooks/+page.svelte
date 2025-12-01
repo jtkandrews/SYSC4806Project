@@ -1,6 +1,5 @@
 <script lang="ts">
     import {onDestroy, onMount} from "svelte";
-    import {goto} from "$app/navigation";
     import type {Book} from "$lib/types";
     import { addToCart } from '$lib/stores/cart';
 
@@ -303,7 +302,7 @@
     {#each books.slice(0, 8) as book, i}
         <!-- Container for book cards that will be displayed (block) or hidden (none)-->
         <div class="book-card" style="display: {i === normalizedIndex ? 'block' : 'none'};">
-            <a href={`/book/${book.isbn}`} class="book-card-link">
+<!--            <a href={`/book/${book.isbn}`} class="book-card-link">-->
             <div class="book-card-number">{i + 1}/8</div>
             <!-- If image url exists show image -->
             {#if book.imageUrl?.trim()}
@@ -329,20 +328,16 @@
                 <p class="price">${book.price}</p>
 
                 <div class="button-container">
-                    <form action="/api/cart" method="post">
-                        <input type="hidden" name="bookIsbn" value={book.isbn} />
-                        <button class="add-to-cart-button cursor" type="submit" on:click={() => goto('/cart')}>Add to Cart</button>
-<!--                    <button-->
-<!--                            class="add-to-cart-button cursor"-->
-<!--                            disabled={book.inventory === 0}-->
-<!--                            on:click|stopPropagation|preventDefault={() => handleAddToCart(book)}-->
-<!--                    >-->
-<!--                        Add to Cart-->
-<!--                    </button>-->
-                    </form>
+                    <button
+                            class="add-to-cart-button cursor"
+                            disabled={book.inventory === 0}
+                            on:click|stopPropagation|preventDefault={() => handleAddToCart(book)}
+                    >
+                        Add to Cart
+                    </button>
                 </div>
             </div>
-            </a>
+<!--            </a>-->
         </div>
     {/each}
 
